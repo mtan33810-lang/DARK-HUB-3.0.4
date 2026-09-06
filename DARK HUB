@@ -1150,7 +1150,7 @@ AutomaticallyTab:CreateToggle({
 
 local Button = AutomaticallyTab:CreateButton({
    Name = "Equip Water Can",
-   Callback = function(Value)
+   Callback = equipWaterCan()
        autoEquipCan = Value
 
         if Value then
