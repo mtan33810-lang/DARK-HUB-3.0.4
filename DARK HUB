@@ -462,6 +462,116 @@ local function getNearbyCollectPlants()
 end
 
 --============================================================
+-- COLLECT REMOTE
+--============================================================
+
+local function getCollectRemote()
+    local Crops = GameEvents:FindFirstChild("Crops")
+
+    if not Crops then
+        return nil
+    end
+
+    return Crops:FindFirstChild("Collect")
+end
+
+local function collectPlant(Plant)
+    if not Plant then
+        return
+    end
+
+    local CollectRemote = getCollectRemote()
+
+    if not CollectRemote then
+        return
+    end
+
+    -- Collect remote expects a table containing the plant
+    CollectRemote:FireServer({
+        Plant
+    })
+end
+
+local function getNearbyCollectPlants()
+    local PlantsPhysical = getPlantsPhysical()
+    local RootPart = getRootPart()
+
+    if not PlantsPhysical or not RootPart then
+        return {}
+    end
+
+    local Result = {}
+    local Seen = {}
+
+    for _, Object in ipairs(PlantsPhysical:GetDescendants()) do
+        local Plant
+
+        if Object:IsA("Model") then
+            Plant = Object
+        elseif Object:IsA("BasePart") then
+            Plant = Object:FindFirstAncestorOfClass("Model")
+        end
+
+        if Plant
+            and Plant ~= PlantsPhysical
+            and not Seen[Plant]
+            and Plant:IsDescendantOf(PlantsPhysical)
+        then
+            Seen[Plant] = true
+
+            if matchesPlant(Plant)
+                and matchesMutation(Plant)
+            then
+                local Position = getPlantPosition(Plant)
+
+                if Position then
+                    local Distance =
+                        (RootPart.Position - Position).Magnitude
+
+                    if Distance <= collectionRadius then
+                        table.insert(Result, {
+                            Object = Plant,
+                            Distance = Distance
+                        })
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(Result, function(A, B)
+        return A.Distance < B.Distance
+    end)
+
+    return Result
+end
+
+--============================================================
+-- AUTO COLLECT LOOP
+--============================================================
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+
+        if autoCollectEnabled then
+            local Plants = getNearbyCollectPlants()
+
+            for _, Data in ipairs(Plants) do
+                if not autoCollectEnabled then
+                    break
+                end
+
+                if Data and Data.Object then
+                    collectPlant(Data.Object)
+                    task.wait(collectCooldown)
+                end
+            end
+        end
+    end
+end)
+
+--============================================================
 -- DATA LISTS (SEEDS)
 --============================================================
 
