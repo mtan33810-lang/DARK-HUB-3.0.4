@@ -685,13 +685,11 @@ local teleportEvent = game:GetService("ReplicatedStorage")
     :WaitForChild("GameEvents")
     :WaitForChild("PlayerTeleportTriggered")
 
--- Gear Shop position
-local GearShopPosition = CFrame.new(-235.4, 3.0, -5.0)
-
 local TeleportToGearButton = HomeTab:CreateButton({
     Name = "Teleport to Gear",
     Callback = function()
-        teleportEvent:FireServer(GearShopPosition)
+        -- Send the string key expected by the server
+        teleportEvent:FireServer("Gear Shop")
 
         Rayfield:Notify({
             Title = "Teleport",
@@ -700,6 +698,7 @@ local TeleportToGearButton = HomeTab:CreateButton({
         })
     end,
 })
+
 
 HomeTab:CreateSection("Setting")
 
