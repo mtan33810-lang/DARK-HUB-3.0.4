@@ -399,7 +399,7 @@ task.spawn(function()
 end)
 
 --============================================================
--- AUTO COLLECT SYSTEM & LOGIC
+-- AUTO COLLECT
 --============================================================
 
 local autoCollectEnabled = false
@@ -411,14 +411,36 @@ local selectedCollectPlants = {}
 local collectionRadius = 100
 local collectCooldown = 0.1
 
+local function matchesPlant(Plant)
+    if autoCollectAll then
+        return true
+    end
+
+    if not autoCollectSelectedPlants then
+        return false
+    end
+
+    local Name = getPlantName(Plant)
+
+    return selectionContains(selectedCollectPlants, Name)
+end
+
+--============================================================
+-- COLLECT REMOTE
+--============================================================
+
 local function getCollectRemote()
     local Crops = GameEvents:FindFirstChild("Crops")
 
-    if not Crops then
-        return nil
+    if Crops then
+        local Collect = Crops:FindFirstChild("Collect")
+
+        if Collect then
+            return Collect
+        end
     end
 
-    return Crops:FindFirstChild("Collect")
+    return nil
 end
 
 local function collectPlant(Plant)
@@ -426,13 +448,26 @@ local function collectPlant(Plant)
         return
     end
 
+    -- Preferred developer-game collect remote
     local CollectRemote = getCollectRemote()
 
-    if not CollectRemote then
+    if CollectRemote then
+        CollectRemote:FireServer({
+            Plant
+        })
+
         return
     end
 
-    CollectRemote:FireServer({ Plant })
+    -- Fallback for plants using ProximityPrompts
+    local Prompt = Plant:FindFirstChildWhichIsA(
+        "ProximityPrompt",
+        true
+    )
+
+    if Prompt and fireproximityprompt then
+        fireproximityprompt(Prompt)
+    end
 end
 
 local function getNearbyCollectPlants()
@@ -444,14 +479,30 @@ local function getNearbyCollectPlants()
     end
 
     local Result = {}
+    local Seen = {}
 
-    for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
-        if Plant:IsA("Model") or Plant:IsA("BasePart") then
+    for _, Object in ipairs(PlantsPhysical:GetDescendants()) do
+        local Plant = Object
+
+        if Object:IsA("Model") then
+            Plant = Object
+        elseif Object:IsA("BasePart") then
+            Plant = Object:FindFirstAncestorOfClass("Model")
+        end
+
+        if Plant
+            and Plant ~= PlantsPhysical
+            and not Seen[Plant]
+            and Plant:IsDescendantOf(PlantsPhysical)
+        then
+            Seen[Plant] = true
+
             if matchesPlant(Plant) then
                 local Position = getPlantPosition(Plant)
 
                 if Position then
-                    local Distance = (RootPart.Position - Position).Magnitude
+                    local Distance =
+                        (RootPart.Position - Position).Magnitude
 
                     if Distance <= collectionRadius then
                         table.insert(Result, {
@@ -476,17 +527,14 @@ task.spawn(function()
         task.wait(0.1)
 
         if autoCollectEnabled then
-            local Plants = getNearbyCollectPlants()
-
-            for _, Data in ipairs(Plants) do
+            for _, Data in ipairs(getNearbyCollectPlants()) do
                 if not autoCollectEnabled then
                     break
                 end
 
-                if Data and Data.Object then
-                    collectPlant(Data.Object)
-                    task.wait(collectCooldown)
-                end
+                collectPlant(Data.Object)
+
+                task.wait(collectCooldown)
             end
         end
     end
