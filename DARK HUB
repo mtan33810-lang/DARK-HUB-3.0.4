@@ -1351,12 +1351,7 @@ AutomaticallyTab:CreateButton({
     Callback = function()
         local plants = getUniquePlantNames()
         WaterPlantDropdown:Refresh(plants)
-
-        Rayfield:Notify({
-            Title = "Plant List Refreshed",
-            Content = "Found " .. tostring(#plants) .. " plant types.",
-            Duration = 2
-        })
+        Rayfield:Notify({ Title = "Refreshed", Content = "Found " .. #plants .. " plants.", Duration = 2 })
     end
 })
 
