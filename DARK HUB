@@ -498,6 +498,19 @@ local ALL_SEEDS = {
 }
 
 --============================================================
+-- AUTO PLANT SYSTEM & LOGIC
+--============================================================
+
+autoPlantAll = false
+autoPlantSelectedSeeds = false
+autoPlantEnabled = false
+
+selectedPlantSeeds = {}
+
+plantCooldown = 0.1
+plantingRadius = 100
+
+--============================================================
 -- HOME TAB
 --============================================================
 
