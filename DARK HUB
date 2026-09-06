@@ -679,26 +679,6 @@ HomeTab:CreateSlider({
     end
 })
 
-HomeTab:CreateSection("Teleport")
-
-local teleportEvent = game:GetService("ReplicatedStorage")
-    :WaitForChild("GameEvents")
-    :WaitForChild("PlayerTeleportTriggered")
-
-local TeleportToGearButton = HomeTab:CreateButton({
-    Name = "Teleport to Gear",
-    Callback = function()
-        -- Send the string key expected by the server
-        teleportEvent:FireServer("Gear Shop")
-
-        Rayfield:Notify({
-            Title = "Teleport",
-            Content = "Teleporting to Gear Shop!",
-            Duration = 3,
-        })
-    end,
-})
-
 
 HomeTab:CreateSection("Setting")
 
