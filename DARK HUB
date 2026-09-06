@@ -1232,7 +1232,7 @@ task.spawn(function()
     end
 end)
 
---============================================================
+-============================================================-
 -- AUTOMATICALLY TAB
 --============================================================
 
@@ -1490,7 +1490,7 @@ AutomaticallyTab:CreateToggle({
 
 local PlantSeedDropdown = AutomaticallyTab:CreateDropdown({
     Name = "Select Seeds",
-    Options = ALL_SEEDS or {}, -- Ensure ALL_SEEDS table exists in your script
+    Options = ALL_SEEDS or {},
     CurrentOption = {},
     MultipleOptions = true,
     Flag = "SelectedPlantSeeds",
@@ -1549,4 +1549,4 @@ AutomaticallyTab:CreateSlider({
         plantingRadius = Value
     end
 })
-
+      
