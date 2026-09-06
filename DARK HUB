@@ -1358,4 +1358,97 @@ Backpack.ChildAdded:Connect(function(Tool)
     end
 end)
 
+--============================================================
+-- AUTO PLANT SEEDS UI
+--============================================================
+
+AutomaticallyTab:CreateSection("AUTO PLANT SEEDS")
+
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Plant ALL Seeds",
+    CurrentValue = false,
+    Flag = "AutoPlantAll",
+
+    Callback = function(Value)
+        autoPlantAll = Value
+        autoPlantEnabled = 
+            autoPlantAll 
+            or autoPlantSelectedSeeds
+    end
+})
+
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Plant Selected Seeds",
+    CurrentValue = false,
+    Flag = "AutoPlantSelectedSeeds",
+
+    Callback = function(Value)
+        autoPlantSelectedSeeds = Value
+        autoPlantEnabled = 
+            autoPlantAll 
+            or autoPlantSelectedSeeds
+    end
+})
+
+local PlantSeedDropdown = AutomaticallyTab:CreateDropdown({
+    Name = "Select Seeds",
+    Options = ALL_SEEDS or {}, -- Ensure ALL_SEEDS table exists in your script
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "SelectedPlantSeeds",
+    Callback = function(Value)
+        selectedPlantSeeds = convertSelection(Value)
+    end
+})
+
+AutomaticallyTab:CreateInput({
+    Name = "Search Seed",
+    PlaceholderText = "Type seed name...",
+    RemoveTextAfterFocusLost = false,
+    Flag = "SeedSearch",
+    Callback = function(Text)
+        local filtered = {}
+        local search = string.lower(Text)
+
+        if search == "" then
+            filtered = ALL_SEEDS or {}
+        else
+            for _, seed in ipairs(ALL_SEEDS or {}) do
+                if string.find(string.lower(seed), search, 1, true) then
+                    table.insert(filtered, seed)
+                end
+            end
+        end
+
+        PlantSeedDropdown:Refresh(filtered)
+    end
+})
+
+AutomaticallyTab:CreateSection("Planting Settings")
+
+AutomaticallyTab:CreateSlider({
+    Name = "Planting Speed",
+    Range = {0.01, 2},
+    Increment = 0.01,
+    Suffix = " sec",
+    CurrentValue = 0.1,
+    Flag = "PlantSpeed",
+
+    Callback = function(Value)
+        plantCooldown = Value
+    end
+})
+
+AutomaticallyTab:CreateSlider({
+    Name = "Planting Radius",
+    Range = {10, 1000},
+    Increment = 10,
+    Suffix = " Studs",
+    CurrentValue = 100,
+    Flag = "PlantingRadius",
+
+    Callback = function(Value)
+        plantingRadius = Value
+    end
+})
 
