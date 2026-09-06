@@ -1,0 +1,1042 @@
+
+--============================================================
+-- DARK HUB 3.0 (UPDATED)
+-- Fixes applied:
+--   1. Removed Auto Collect Mutated Plants
+--   2. Mutation Search dynamic list filtering fix
+--============================================================
+
+--============================================================
+-- RAYFIELD UI INITIALIZATION
+--============================================================
+
+local Rayfield = loadstring(game:HttpGet(
+    "https://sirius.menu/rayfield"
+))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Dark Hub",
+    Icon = 0,
+    LoadingTitle = "Dark Hub",
+    LoadingSubtitle = "by Max",
+    ShowText = "Rayfield",
+    Theme = "Default",
+    ToggleUIKeybind = "K",
+
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = false,
+        FolderName = nil,
+        FileName = "DarkHub"
+    },
+
+    Discord = {
+        Enabled = false,
+        Invite = "",
+        RememberJoins = true
+    },
+
+    KeySystem = false
+})
+
+--============================================================
+-- SERVICES & LOCAL PLAYER
+--============================================================
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+
+--============================================================
+-- GAME EVENTS
+--============================================================
+
+local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
+
+local function getEvent(name)
+    return GameEvents:FindFirstChild(name)
+end
+
+--============================================================
+-- CHARACTER HELPERS
+--============================================================
+
+local function getCharacter()
+    return LocalPlayer.Character
+end
+
+local function getHumanoid()
+    local Character = getCharacter()
+    return Character and Character:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRootPart()
+    local Character = getCharacter()
+    return Character and Character:FindFirstChild("HumanoidRootPart")
+end
+
+--============================================================
+-- PLANT CONTAINER
+--============================================================
+
+local function getPlantsPhysical()
+    local Farm = Workspace:FindFirstChild("Farm")
+
+    if not Farm then
+        return nil
+    end
+
+    local NestedFarm = Farm:FindFirstChild("Farm")
+
+    if NestedFarm then
+        local Important = NestedFarm:FindFirstChild("Important")
+
+        if Important then
+            local Plants = Important:FindFirstChild("Plants_Physical")
+
+            if Plants then
+                return Plants
+            end
+        end
+    end
+
+    return Farm:FindFirstChild("Plants_Physical", true)
+end
+
+--============================================================
+-- DATA LISTS (PLANTS)
+--============================================================
+
+local ALL_PLANTS = {
+    "Apple",
+    "Carrot",
+    "Tomato",
+    "Corn",
+    "Pumpkin",
+    "Strawberry",
+    "Blueberry",
+    "Buttercup",
+    "Orange Tulip",
+    "Daffodil",
+    "Watermelon",
+    "Coconut",
+    "Banana",
+    "Bamboo",
+    "Cactus",
+    "Dragon Fruit",
+    "Mango",
+    "Grape",
+    "Pepper",
+    "Cacao",
+    "Mushroom",
+    "Beanstalk",
+    "Ember Lily",
+    "Sugar Apple",
+    "Burning Bud",
+    "Giant Pinecone",
+    "Elder Strawberry",
+    "Romanesco",
+    "Potato",
+    "Broccoli",
+    "Cocomango",
+    "Brussels Sprouts",
+    "Crimson Thorn",
+    "Trinity Fruit",
+    "Alien Apple",
+    "Moongrain Meadow",
+    "Daisy",
+    "Sunflower",
+    "Octobloom",
+    "Zebrazinkle",
+    "Coneflower",
+    "Birds of Paradise",
+    "Hollow"
+}
+
+--============================================================
+-- SELECTION HELPERS
+--============================================================
+
+local function convertSelection(Value)
+    if type(Value) == "table" then
+        return Value
+    end
+
+    if Value ~= nil then
+        return {Value}
+    end
+
+    return {}
+end
+
+local function containsIgnoreCase(text, search)
+    if not text or not search then
+        return false
+    end
+
+    return string.find(
+        string.lower(tostring(text)),
+        string.lower(tostring(search)),
+        1,
+        true
+    ) ~= nil
+end
+
+local function selectionContains(list, value)
+    for _, selected in ipairs(list) do
+        if containsIgnoreCase(value, selected) then
+            return true
+        end
+    end
+
+    return false
+end
+
+--============================================================
+-- AUTO WATER SYSTEM
+--============================================================
+
+local autoWaterEnabled = false
+local autoEquipCan = false
+
+local selectedWaterCan = "Water Can"
+local selectedWaterPlants = {}
+
+local waterRadius = 100
+local waterCooldown = 0.2
+
+local WaterCans = {
+    "Water Can",
+    "Wonder Water",
+    "Super Watering Can",
+    "Sugar Watering Can"
+}
+
+local function getWaterRemote()
+    return GameEvents:FindFirstChild("Water_RE")
+end
+
+local function getPlantPosition(Plant)
+    if not Plant then
+        return nil
+    end
+
+    if Plant:IsA("BasePart") then
+        return Plant.Position
+    end
+
+    if Plant:IsA("Model") then
+        if Plant.PrimaryPart then
+            return Plant.PrimaryPart.Position
+        end
+
+        local Part = Plant:FindFirstChildWhichIsA(
+            "BasePart",
+            true
+        )
+
+        if Part then
+            return Part.Position
+        end
+    end
+
+    return nil
+end
+
+local function getPlantName(Plant)
+    if not Plant then
+        return ""
+    end
+
+    local AttributeName = Plant:GetAttribute("PlantName")
+
+    if AttributeName then
+        return tostring(AttributeName)
+    end
+
+    return Plant.Name
+end
+
+local function getUniquePlantNames()
+    local Result = {}
+    local Seen = {}
+
+    local PlantsPhysical = getPlantsPhysical()
+
+    if not PlantsPhysical then
+        return ALL_PLANTS
+    end
+
+    for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
+        local Name = getPlantName(Plant)
+
+        if Name ~= "" and not Seen[Name] then
+            Seen[Name] = true
+            table.insert(Result, Name)
+        end
+    end
+
+    if #Result == 0 then
+        return ALL_PLANTS
+    end
+
+    table.sort(Result)
+
+    return Result
+end
+
+local function equipWaterCan()
+    local Character = getCharacter()
+    local Humanoid = getHumanoid()
+
+    if not Character or not Humanoid then
+        return false
+    end
+
+    for _, Tool in ipairs(Character:GetChildren()) do
+        if Tool:IsA("Tool") then
+            if string.lower(Tool.Name) == string.lower(selectedWaterCan) then
+                return true
+            end
+        end
+    end
+
+    local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+
+    if not Backpack then
+        return false
+    end
+
+    for _, Tool in ipairs(Backpack:GetChildren()) do
+        if Tool:IsA("Tool") then
+            if string.lower(Tool.Name) == string.lower(selectedWaterCan) then
+                Humanoid:EquipTool(Tool)
+                return true
+            end
+        end
+    end
+
+    for _, Tool in ipairs(Backpack:GetChildren()) do
+        if Tool:IsA("Tool") then
+            if containsIgnoreCase(Tool.Name, "water") then
+                Humanoid:EquipTool(Tool)
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+local function waterPlant(Plant)
+    local Remote = getWaterRemote()
+
+    if not Remote then
+        return
+    end
+
+    local Position = getPlantPosition(Plant)
+
+    if Position then
+        Remote:FireServer(Position)
+    end
+end
+
+local function getNearbyWaterPlants()
+    local PlantsPhysical = getPlantsPhysical()
+    local RootPart = getRootPart()
+
+    if not PlantsPhysical or not RootPart then
+        return {}
+    end
+
+    local Result = {}
+
+    for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
+        local Position = getPlantPosition(Plant)
+
+        if Position then
+            local Distance = (RootPart.Position - Position).Magnitude
+
+            if Distance <= waterRadius then
+                local Name = getPlantName(Plant)
+
+                local Allowed =
+                    #selectedWaterPlants == 0
+                    or selectionContains(selectedWaterPlants, Name)
+
+                if Allowed then
+                    table.insert(Result, {
+                        Object = Plant,
+                        Distance = Distance
+                    })
+                end
+            end
+        end
+    end
+
+    table.sort(Result, function(A, B)
+        return A.Distance < B.Distance
+    end)
+
+    return Result
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+
+        if autoWaterEnabled then
+            if autoEquipCan then
+                equipWaterCan()
+            end
+
+            for _, Data in ipairs(getNearbyWaterPlants()) do
+                if not autoWaterEnabled then
+                    break
+                end
+
+                waterPlant(Data.Object)
+                task.wait(waterCooldown)
+            end
+        end
+    end
+end)
+
+--============================================================
+-- AUTO COLLECT SYSTEM & LOGIC
+--============================================================
+
+local autoCollectEnabled = false
+local autoCollectAll = false
+local autoCollectSelectedPlants = false
+
+local selectedCollectPlants = {}
+
+local collectionRadius = 100
+local collectCooldown = 0.1
+
+local function matchesPlant(Plant)
+    if not Plant then
+        return false
+    end
+
+    if autoCollectAll then
+        return true
+    end
+
+    if not autoCollectSelectedPlants then
+        return false
+    end
+
+    local Name = getPlantName(Plant)
+
+    return selectionContains(
+        selectedCollectPlants,
+        Name
+    )
+end
+
+local function getNearbyCollectPlants()
+    local PlantsPhysical = getPlantsPhysical()
+    local RootPart = getRootPart()
+
+    if not PlantsPhysical or not RootPart then
+        return {}
+    end
+
+    local Result = {}
+    local Seen = {}
+
+    for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
+        if Plant:IsA("Model") or Plant:IsA("BasePart") then
+            if not Seen[Plant] then
+                Seen[Plant] = true
+
+                if matchesPlant(Plant) then
+                    local Position = getPlantPosition(Plant)
+
+                    if Position then
+                        local Distance =
+                            (RootPart.Position - Position).Magnitude
+
+                        if Distance <= collectionRadius then
+                            table.insert(Result, {
+                                Object = Plant,
+                                Distance = Distance
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(Result, function(A, B)
+        return A.Distance < B.Distance
+    end)
+
+    return Result
+end
+
+--============================================================
+-- HOME TAB
+--============================================================
+
+local HomeTab = Window:CreateTab(
+    "Home",
+    4483362458
+)
+
+HomeTab:CreateSection("Movement")
+
+local infiniteJump = false
+
+HomeTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfiniteJump",
+
+    Callback = function(Value)
+        infiniteJump = Value
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if not infiniteJump then
+        return
+    end
+
+    local Humanoid = getHumanoid()
+
+    if Humanoid then
+        Humanoid:ChangeState(
+            Enum.HumanoidStateType.Jumping
+        )
+    end
+end)
+
+HomeTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = " Speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeed",
+
+    Callback = function(Value)
+        local Humanoid = getHumanoid()
+
+        if Humanoid then
+            Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+HomeTab:CreateSlider({
+    Name = "Jump Height",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = " Height",
+    CurrentValue = 7,
+    Flag = "JumpHeight",
+
+    Callback = function(Value)
+        local Humanoid = getHumanoid()
+
+        if Humanoid then
+            Humanoid.UseJumpPower = false
+            Humanoid.JumpHeight = Value
+        end
+    end
+})
+
+HomeTab:CreateSection("Setting")
+
+local SettingsService = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SettingsService")
+
+HomeTab:CreateToggle({
+    Name = "Remove Notifications",
+    CurrentValue = false,
+    Flag = "DisableNotificationsToggle",
+    Callback = function(Value)
+        pcall(function()
+            SettingsService:FireServer("SetSetting", "ToggleNotifications", not Value)
+        end)
+    end,
+})
+
+--============================================================
+-- EVENT TAB
+--============================================================
+
+local EventTab = Window:CreateTab(
+    "Event",
+    4483362458
+)
+
+EventTab:CreateSection("BEANSTALK")
+
+local autoBeanstalk = false
+
+EventTab:CreateToggle({
+    Name = "Auto Submit All Plants",
+    CurrentValue = false,
+    Flag = "AutoBeanstalk",
+
+    Callback = function(Value)
+        autoBeanstalk = Value
+
+        if Value then
+            task.spawn(function()
+                while autoBeanstalk do
+                    local Events = GameEvents:FindFirstChild("Events")
+
+                    local BeanstalkEvent =
+                        Events
+                        and Events:FindFirstChild("BeanstalkEvent")
+
+                    local Submit =
+                        BeanstalkEvent
+                        and BeanstalkEvent:FindFirstChild(
+                            "BeanstalkRESubmitAllPlant"
+                        )
+
+                    if Submit then
+                        Submit:FireServer()
+                    end
+
+                    task.wait(10)
+                end
+            end)
+        end
+    end
+})
+
+local ClaimRewardRE = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Events"):WaitForChild("BeanstalkEvent"):WaitForChild("BeanstalkREClaimReward")
+
+local toggledRewards = false
+local MAX_REWARDS = 5
+
+EventTab:CreateToggle({
+    Name = "Auto Claim All Rewards",
+    CurrentValue = false,
+    Flag = "AutoClaimRewardsToggle",
+    Callback = function(Value)
+        toggledRewards = Value
+        if toggledRewards then
+            task.spawn(function()
+                while toggledRewards do
+                    for i = 1, MAX_REWARDS do
+                        if not toggledRewards then break end
+                        pcall(function()
+                            ClaimRewardRE:FireServer(i)
+                        end)
+                        task.wait(0.1)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
+
+EventTab:CreateSection("GOLD CAULDRON")
+
+local GoldCauldronSubmitAll = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Events"):WaitForChild("BeanstalkEvent"):WaitForChild("GoldCauldronSubmitAll")
+
+local toggledCauldron = false
+
+EventTab:CreateToggle({
+    Name = "Auto Submit Gold Cauldron",
+    CurrentValue = false,
+    Flag = "GoldCauldronToggle",
+    Callback = function(Value)
+        toggledCauldron = Value
+        if toggledCauldron then
+            task.spawn(function()
+                while toggledCauldron do
+                    pcall(function()
+                        GoldCauldronSubmitAll:FireServer()
+                    end)
+                    task.wait(5)
+                end
+            end)
+        end
+    end,
+})
+
+--============================================================
+-- BIZZY BEE
+--============================================================
+
+EventTab:CreateSection("🐝BIZZY BEE")
+
+local autoSubmitHoney = false
+
+EventTab:CreateToggle({
+    Name = "Auto Submit All",
+    CurrentValue = false,
+    Flag = "AutoSubmitHoney",
+
+    Callback = function(Value)
+        autoSubmitHoney = Value
+
+        if Value then
+            task.spawn(function()
+                while autoSubmitHoney do
+                    local Remote =
+                        getEvent("HoneyMachine2026Service_RE")
+
+                    if Remote then
+                        Remote:FireServer("SubmitAll")
+                    end
+
+                    task.wait(5)
+                end
+            end)
+        end
+    end
+})
+
+local autoCollectHoney = false
+
+EventTab:CreateToggle({
+    Name = "Auto Collect Honey",
+    CurrentValue = false,
+    Flag = "AutoCollectHoney",
+
+    Callback = function(Value)
+        autoCollectHoney = Value
+
+        if Value then
+            task.spawn(function()
+                while autoCollectHoney do
+                    local Remote =
+                        getEvent("HoneyMachine2026Service_RE")
+
+                    if Remote then
+                        Remote:FireServer("CollectHoney")
+                    end
+
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+--============================================================
+-- HONEY SEED SHOP
+--============================================================
+
+EventTab:CreateSection("HONEY SEED SHOP")
+
+local honeySeedOptions = {
+    "Honey Carrot", "Honey Strawberry", "Honey Blueberry", "Honey Buttercup",
+    "Honey Orange Tulip", "Honey Corn", "Honey Daffodil", "Honey Tomato",
+    "Honey Apple", "Honey Bamboo", "Honey Pumpkin", "Honey Watermelon",
+    "Honey Cactus", "Honey Coconut", "Honey Dragon Fruit", "Honey Mango",
+    "Honey Cacao", "Honey Grape", "Honey Mushroom", "Honey Pepper",
+    "Honey Sunflower", "Honey Beanstalk", "Honey Burning Bud", "Honey Giant Pinecone",
+    "Honey Ember Lily", "Honey Sugar Apple", "Honey Alien Apple", "Honey Crimson Thorn",
+    "Honey Elder Strawberry", "Honey Moongrain Meadow", "Honey Octobloom",
+    "Honey Romanesco", "Honey Zebrazinkle"
+}
+
+local selectedHoneySeeds = {}
+local autoBuyHoneySeeds = false
+
+EventTab:CreateDropdown({
+    Name = "Select Seeds to Auto Buy",
+    Options = honeySeedOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "EventSeedDropdownFlag",
+    Callback = function(Options)
+        selectedHoneySeeds = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+EventTab:CreateToggle({
+    Name = "Auto Buy Seeds",
+    CurrentValue = false,
+    Flag = "AutoBuyHoneySeedsFlag",
+    Callback = function(Value)
+        autoBuyHoneySeeds = Value
+
+        if Value then
+            task.spawn(function()
+                while autoBuyHoneySeeds do
+                    if selectedHoneySeeds and #selectedHoneySeeds > 0 then
+                        pcall(function()
+                            local BuyRemote = GameEvents:FindFirstChild("BuySeed_RE")
+                            if BuyRemote then
+                                for _, seedName in ipairs(selectedHoneySeeds) do
+                                    BuyRemote:FireServer(seedName)
+                                end
+                            end
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+})
+
+--============================================================
+-- AUTOMATICALLY TAB
+--============================================================
+
+local AutomaticallyTab = Window:CreateTab(
+    "Automatically",
+    4483362458
+)
+
+AutomaticallyTab:CreateSection("AUTO WATER")
+
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Water Plants",
+    CurrentValue = false,
+    Flag = "AutoWater",
+
+    Callback = function(Value)
+        autoWaterEnabled = Value
+    end
+})
+
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Equip Water Can",
+    CurrentValue = false,
+    Flag = "AutoEquipCan",
+
+    Callback = function(Value)
+        autoEquipCan = Value
+
+        if Value then
+            equipWaterCan()
+        end
+    end
+})
+
+local WaterPlantDropdown = AutomaticallyTab:CreateDropdown({
+    Name = "Select Plants To Water",
+    Options = getUniquePlantNames(),
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "SelectedWaterPlants",
+
+    Callback = function(Value)
+        selectedWaterPlants = convertSelection(Value)
+    end
+})
+
+AutomaticallyTab:CreateButton({
+    Name = "Refresh Plant List",
+
+    Callback = function()
+        local plants = getUniquePlantNames()
+
+        WaterPlantDropdown:Refresh(plants)
+
+        Rayfield:Notify({
+            Title = "Plant List Refreshed",
+            Content = "Found " .. tostring(#plants) .. " plant types.",
+            Duration = 2
+        })
+    end
+})
+
+AutomaticallyTab:CreateSlider({
+    Name = "Water Radius",
+    Range = {10, 500},
+    Increment = 10,
+    Suffix = " Studs",
+    CurrentValue = 100,
+    Flag = "WaterRadius",
+
+    Callback = function(Value)
+        waterRadius = Value
+    end
+})
+
+AutomaticallyTab:CreateSlider({
+    Name = "Water Speed",
+    Range = {0.05, 2},
+    Increment = 0.05,
+    Suffix = " sec",
+    CurrentValue = 0.5,
+    Flag = "WaterSpeed",
+
+    Callback = function(Value)
+        waterCooldown = Value
+    end
+})
+
+--============================================================
+-- AUTO COLLECT UI
+--============================================================
+
+AutomaticallyTab:CreateSection("AUTO COLLECT PLANTS")
+
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Collect ALL Plants",
+    CurrentValue = false,
+    Flag = "AutoCollectAll",
+
+    Callback = function(Value)
+        autoCollectAll = Value
+        autoCollectEnabled = autoCollectAll or autoCollectSelectedPlants
+    end
+})
+
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Collect Selected Plants",
+    CurrentValue = false,
+    Flag = "AutoCollectSelectedPlants",
+
+    Callback = function(Value)
+        autoCollectSelectedPlants = Value
+        autoCollectEnabled = autoCollectAll or autoCollectSelectedPlants
+    end
+})
+
+local CollectPlantDropdown = AutomaticallyTab:CreateDropdown({
+    Name = "Select Plants",
+    Options = ALL_PLANTS,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "SelectedCollectPlants",
+    Callback = function(Value)
+        selectedCollectPlants = convertSelection(Value)
+    end
+})
+
+AutomaticallyTab:CreateInput({
+    Name = "Search Plant",
+    PlaceholderText = "Type plant name...",
+    RemoveTextAfterFocusLost = false,
+    Flag = "PlantSearch",
+    Callback = function(Text)
+        local filtered = {}
+        local search = string.lower(Text)
+
+        if search == "" then
+            filtered = ALL_PLANTS
+        else
+            for _, plant in ipairs(ALL_PLANTS) do
+                if string.find(string.lower(plant), search, 1, true) then
+                    table.insert(filtered, plant)
+                end
+            end
+        end
+
+        CollectPlantDropdown:Refresh(filtered)
+    end
+})
+
+AutomaticallyTab:CreateSection("Settings")
+
+AutomaticallyTab:CreateSlider({
+    Name = "Collection Radius",
+    Range = {10, 1000},
+    Increment = 10,
+    Suffix = " Studs",
+    CurrentValue = 100,
+    Flag = "CollectionRadius",
+
+    Callback = function(Value)
+        collectionRadius = Value
+    end
+})
+
+AutomaticallyTab:CreateSlider({
+    Name = "Collect Speed",
+    Range = {0.01, 2},
+    Increment = 0.01,
+    Suffix = " sec",
+    CurrentValue = 0.1,
+    Flag = "CollectSpeed",
+
+    Callback = function(Value)
+        collectCooldown = Value
+    end
+})
+
+--============================================================
+-- CHARACTER / TOOL HANDLING
+--============================================================
+
+LocalPlayer.CharacterAdded:Connect(function(Character)
+    local Humanoid = Character:WaitForChild("Humanoid", 10)
+
+    if Humanoid then
+        task.wait(0.5)
+
+        if autoEquipCan then
+            equipWaterCan()
+        end
+    end
+end)
+
+local Backpack = LocalPlayer:WaitForChild("Backpack")
+
+Backpack.ChildAdded:Connect(function(Tool)
+    if not autoEquipCan then
+        return
+    end
+
+    if not Tool:IsA("Tool") then
+        return
+    end
+
+    if containsIgnoreCase(Tool.Name, "water") then
+        task.wait(0.1)
+        equipWaterCan()
+    end
+end)
+
+--============================================================
+-- THEMES TAB
+--============================================================
+
+local ThemesTab = Window:CreateTab(
+    "Themes",
+    4483362458
+)
+
+ThemesTab:CreateSection("Themes")
+
+local Themes = {
+    "Default",
+    "AmberGlow",
+    "Amethyst",
+    "Bloom",
+    "DarkBlue",
+    "Green",
+    "Light",
+    "Ocean",
+    "Serenity"
+}
+
+for _, ThemeName in ipairs(Themes) do
+    ThemesTab:CreateButton({
+        Name = ThemeName,
+
+        Callback = function()
+            Window.ModifyTheme(ThemeName)
+
+            Rayfield:Notify({
+                Title = "Theme Changed",
+                Content = "Theme: " .. ThemeName,
+                Duration = 2
+            })
+        end
+    })
+end
