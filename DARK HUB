@@ -571,6 +571,36 @@ HomeTab:CreateToggle({
     end,
 })
 
+HomeTab:CreateSection("Themes")
+
+local Themes = {
+    "Default",
+    "AmberGlow",
+    "Amethyst",
+    "Bloom",
+    "DarkBlue",
+    "Green",
+    "Light",
+    "Ocean",
+    "Serenity"
+}
+
+for _, ThemeName in ipairs(Themes) do
+    ThemesTab:CreateButton({
+        Name = ThemeName,
+
+        Callback = function()
+            Window.ModifyTheme(ThemeName)
+
+            Rayfield:Notify({
+                Title = "Theme Changed",
+                Content = "Theme: " .. ThemeName,
+                Duration = 2
+            })
+        end
+    })
+end
+
 --============================================================
 -- EVENT TAB
 --============================================================
@@ -1337,41 +1367,4 @@ Backpack.ChildAdded:Connect(function(Tool)
     end
 end)
 
---============================================================
--- THEMES TAB
---============================================================
 
-local ThemesTab = Window:CreateTab(
-    "Themes",
-    4483362458
-)
-
-ThemesTab:CreateSection("Themes")
-
-local Themes = {
-    "Default",
-    "AmberGlow",
-    "Amethyst",
-    "Bloom",
-    "DarkBlue",
-    "Green",
-    "Light",
-    "Ocean",
-    "Serenity"
-}
-
-for _, ThemeName in ipairs(Themes) do
-    ThemesTab:CreateButton({
-        Name = ThemeName,
-
-        Callback = function()
-            Window.ModifyTheme(ThemeName)
-
-            Rayfield:Notify({
-                Title = "Theme Changed",
-                Content = "Theme: " .. ThemeName,
-                Duration = 2
-            })
-        end
-    })
-end
