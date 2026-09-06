@@ -613,10 +613,10 @@ end)
 
 local HomeTab = Window:CreateTab(
     "🏠 Home",
-    4483362458
+    nil
 )
 
-HomeTab:CreateSection("Movement")
+HomeTab:CreateSection("🚶Movement")
 
 local infiniteJump = false
 
@@ -680,7 +680,7 @@ HomeTab:CreateSlider({
 })
 
 
-HomeTab:CreateSection("Setting")
+HomeTab:CreateSection("⚙️ Setting")
 
 local SettingsService = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SettingsService")
 
@@ -730,8 +730,8 @@ end
 --============================================================
 
 local EventTab = Window:CreateTab(
-    "Event",
-    4483362458
+    "🎉 Event",
+    nil
 )
 
 EventTab:CreateSection("BEANSTALK")
@@ -889,7 +889,7 @@ EventTab:CreateToggle({
 -- HONEY SEED SHOP
 --============================================================
 
-EventTab:CreateSection("HONEY SEED SHOP")
+EventTab:CreateSection("🐝 HONEY SEED SHOP")
 
 local honeySeedOptions = {
     "Honey Carrot", "Honey Strawberry", "Honey Blueberry", "Honey Buttercup",
@@ -918,7 +918,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "Auto Buy Seeds",
+    Name = "🍯 Auto Buy Seeds",
     CurrentValue = false,
     Flag = "AutoBuyHoneySeedsFlag",
     Callback = function(Value)
@@ -951,7 +951,7 @@ EventTab:CreateToggle({
 -- HONEY COIN SHOP
 --============================================================
 
-local Section = EventTab:CreateSection("HONEY COIN SHOP")
+local Section = EventTab:CreateSection("🐝 HONEY COIN SHOP")
 
 local coinShopOptions = {
     "Honey Honey Daisy", "Honey Honey Dew", "Honey Hive Seed Pack", "Honey Ambercomb",
@@ -974,7 +974,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "Auto Buy Selected Item",
+    Name = "🍯 Auto Buy Selected Item",
     CurrentValue = false,
     Flag = "AutoBuyCoinShopFlag",
     Callback = function(Value)
@@ -1007,7 +1007,7 @@ EventTab:CreateToggle({
 -- ROYAL JELLY SHOP
 --============================================================
 
-local Section = EventTab:CreateSection("ROYAL JELLY SHOP")
+local Section = EventTab:CreateSection("👑 ROYAL JELLY SHOP")
 
 local royalJellyOptions = {
     "Pollen Puffball", "Grape Droplet", "Carpenter Bee",
@@ -1029,7 +1029,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "Auto Buy Royal Jelly Shop",
+    Name = "🫟 Auto Buy Royal Jelly Shop",
     CurrentValue = false,
     Flag = "AutoBuyRoyalJellyShopFlag",
     Callback = function(Value)
@@ -1062,7 +1062,7 @@ EventTab:CreateToggle({
 -- BEE EGG SHOP
 --============================================================
 
-local Section = EventTab:CreateSection("BEE EGG SHOP")
+local Section = EventTab:CreateSection("🐝 BEE EGG SHOP")
 
 local beeEggOptions = {
     "Common Bee Egg", "Rare Bee Egg", "Mythical Bee Egg", "Transcendent Bee Egg"
@@ -1083,7 +1083,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "Auto Buy Bee Eggs",
+    Name = "🥚 Auto Buy Bee Eggs",
     CurrentValue = false,
     Flag = "AutoBuyBeeEggsFlag",
     Callback = function(Value)
@@ -1194,7 +1194,7 @@ local selectedGears = {}
 local autoBuyGears = false
 
 ShopTab:CreateDropdown({
-    Name = "⚙️ Select Gears to Auto Buy",
+    Name = "Select Gears to Auto Buy",
     Options = gearOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1205,7 +1205,7 @@ ShopTab:CreateDropdown({
 })
 
 ShopTab:CreateToggle({
-    Name = "Auto Buy Multiple Gears",
+    Name = "⚙️ Auto Buy Gears",
     CurrentValue = false,
     Flag = "AutoBuyMultiFlag",
     Callback = function(Value)
@@ -1245,7 +1245,7 @@ local selectedEggs = {}
 local autoBuyEggs = false
 
 ShopTab:CreateDropdown({
-    Name = "🥚 Select Eggs to Auto Buy",
+    Name = "Select Eggs to Auto Buy",
     Options = eggOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1256,7 +1256,7 @@ ShopTab:CreateDropdown({
 })
 
 ShopTab:CreateToggle({
-    Name = "Auto Buy Eggs",
+    Name = "🥚 Auto Buy Eggs",
     CurrentValue = false,
     Flag = "AutoBuyEggsFlag",
     Callback = function(Value)
