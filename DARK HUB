@@ -1279,15 +1279,37 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+    
+-- Global/Scope Variables (Ensure these are declared prior to UI building)
+ALL_PLANTS = ALL_PLANTS or {}
+ALL_SEEDS = ALL_SEEDS or {}
 
--=============================================================
+-- Helper to update dropdown options safely
+local function filterList(sourceList, searchText)
+    local filtered = {}
+    local search = string.lower(searchText or "")
+
+    if search == "" then
+        return sourceList
+    end
+
+    for _, item in ipairs(sourceList) do
+        if string.find(string.lower(item), search, 1, true) then
+            table.insert(filtered, item)
+        end
+    end
+    return filtered
+end
+
+--============================================================
 -- AUTOMATICALLY TAB
 --============================================================
 
-local AutomaticallyTab = Window:CreateTab(
-    "Automatically",
-    4483362458
-)
+local AutomaticallyTab = Window:CreateTab("Automatically", 4483362458)
+
+--============================================================
+-- AUTO WATER
+--============================================================
 
 AutomaticallyTab:CreateSection("AUTO WATER")
 
@@ -1295,7 +1317,6 @@ AutomaticallyTab:CreateToggle({
     Name = "Auto Water Plants",
     CurrentValue = false,
     Flag = "AutoWater",
-
     Callback = function(Value)
         autoWaterEnabled = Value
     end
@@ -1303,23 +1324,14 @@ AutomaticallyTab:CreateToggle({
 
 AutomaticallyTab:CreateButton({
     Name = "Equip Water Can",
-
     Callback = function()
         local Equipped = equipWaterCan()
-
-        if Equipped then
-            Rayfield:Notify({
-                Title = "Water Can",
-                Content = "Equipped: " .. selectedWaterCan,
-                Duration = 2
-            })
-        else
-            Rayfield:Notify({
-                Title = "Water Can",
-                Content = selectedWaterCan .. " was not found.",
-                Duration = 2
-            })
-        end
+        
+        Rayfield:Notify({
+            Title = "Water Can",
+            Content = Equipped and ("Equipped: " .. tostring(selectedWaterCan)) or (tostring(selectedWaterCan) .. " was not found."),
+            Duration = 2
+        })
     end,
 })
 
@@ -1329,18 +1341,15 @@ local WaterPlantDropdown = AutomaticallyTab:CreateDropdown({
     CurrentOption = {},
     MultipleOptions = true,
     Flag = "SelectedWaterPlants",
-
     Callback = function(Value)
-        selectedWaterPlants = convertSelection(Value)
+        selectedWaterPlants = convertSelection and convertSelection(Value) or Value
     end
 })
 
 AutomaticallyTab:CreateButton({
     Name = "Refresh Plant List",
-
     Callback = function()
         local plants = getUniquePlantNames()
-
         WaterPlantDropdown:Refresh(plants)
 
         Rayfield:Notify({
@@ -1358,7 +1367,6 @@ AutomaticallyTab:CreateSlider({
     Suffix = " Studs",
     CurrentValue = 100,
     Flag = "WaterRadius",
-
     Callback = function(Value)
         waterRadius = Value
     end
@@ -1371,7 +1379,6 @@ AutomaticallyTab:CreateSlider({
     Suffix = " sec",
     CurrentValue = 0.5,
     Flag = "WaterSpeed",
-
     Callback = function(Value)
         waterCooldown = Value
     end
@@ -1443,67 +1450,6 @@ AutomaticallyTab:CreateInput({
     end
 })
 
-AutomaticallyTab:CreateSection("Settings")
-
-AutomaticallyTab:CreateSlider({
-    Name = "Collection Radius",
-    Range = {10, 1000},
-    Increment = 10,
-    Suffix = " Studs",
-    CurrentValue = 100,
-    Flag = "CollectionRadius",
-
-    Callback = function(Value)
-        collectionRadius = Value
-    end
-})
-
-AutomaticallyTab:CreateSlider({
-    Name = "Collect Speed",
-    Range = {0.01, 2},
-    Increment = 0.01,
-    Suffix = " sec",
-    CurrentValue = 0.1,
-    Flag = "CollectSpeed",
-
-    Callback = function(Value)
-        collectCooldown = Value
-    end
-})
-
---============================================================
--- CHARACTER / TOOL HANDLING
---============================================================
-
-LocalPlayer.CharacterAdded:Connect(function(Character)
-    local Humanoid = Character:WaitForChild("Humanoid", 10)
-
-    if Humanoid then
-        task.wait(0.5)
-
-        if autoEquipCan then
-            equipWaterCan()
-        end
-    end
-end)
-
-local Backpack = LocalPlayer:WaitForChild("Backpack")
-
-Backpack.ChildAdded:Connect(function(Tool)
-    if not autoEquipCan then
-        return
-    end
-
-    if not Tool:IsA("Tool") then
-        return
-    end
-
-    if containsIgnoreCase(Tool.Name, "water") then
-        task.wait(0.1)
-        equipWaterCan()
-    end
-end)
-
 --============================================================
 -- AUTO PLANT SEEDS UI
 --============================================================
@@ -1514,12 +1460,9 @@ AutomaticallyTab:CreateToggle({
     Name = "Auto Plant ALL Seeds",
     CurrentValue = false,
     Flag = "AutoPlantAll",
-
     Callback = function(Value)
         autoPlantAll = Value
-        autoPlantEnabled = 
-            autoPlantAll 
-            or autoPlantSelectedSeeds
+        autoPlantEnabled = autoPlantAll or autoPlantSelectedSeeds
     end
 })
 
@@ -1527,23 +1470,20 @@ AutomaticallyTab:CreateToggle({
     Name = "Auto Plant Selected Seeds",
     CurrentValue = false,
     Flag = "AutoPlantSelectedSeeds",
-
     Callback = function(Value)
         autoPlantSelectedSeeds = Value
-        autoPlantEnabled = 
-            autoPlantAll 
-            or autoPlantSelectedSeeds
+        autoPlantEnabled = autoPlantAll or autoPlantSelectedSeeds
     end
 })
 
 local PlantSeedDropdown = AutomaticallyTab:CreateDropdown({
     Name = "Select Seeds",
-    Options = ALL_SEEDS or {},
+    Options = ALL_SEEDS,
     CurrentOption = {},
     MultipleOptions = true,
     Flag = "SelectedPlantSeeds",
     Callback = function(Value)
-        selectedPlantSeeds = convertSelection(Value)
+        selectedPlantSeeds = convertSelection and convertSelection(Value) or Value
     end
 })
 
@@ -1553,24 +1493,9 @@ AutomaticallyTab:CreateInput({
     RemoveTextAfterFocusLost = false,
     Flag = "SeedSearch",
     Callback = function(Text)
-        local filtered = {}
-        local search = string.lower(Text)
-
-        if search == "" then
-            filtered = ALL_SEEDS or {}
-        else
-            for _, seed in ipairs(ALL_SEEDS or {}) do
-                if string.find(string.lower(seed), search, 1, true) then
-                    table.insert(filtered, seed)
-                end
-            end
-        end
-
-        PlantSeedDropdown:Refresh(filtered)
+        PlantSeedDropdown:Refresh(filterList(ALL_SEEDS, Text))
     end
 })
-
-AutomaticallyTab:CreateSection("Planting Settings")
 
 AutomaticallyTab:CreateSlider({
     Name = "Planting Speed",
@@ -1579,7 +1504,6 @@ AutomaticallyTab:CreateSlider({
     Suffix = " sec",
     CurrentValue = 0.1,
     Flag = "PlantSpeed",
-
     Callback = function(Value)
         plantCooldown = Value
     end
@@ -1592,9 +1516,39 @@ AutomaticallyTab:CreateSlider({
     Suffix = " Studs",
     CurrentValue = 100,
     Flag = "PlantingRadius",
-
     Callback = function(Value)
         plantingRadius = Value
     end
 })
-      
+
+--============================================================
+-- CHARACTER / TOOL HANDLING
+--============================================================
+
+local function setupBackpackListener(backpack)
+    if not backpack then return end
+    backpack.ChildAdded:Connect(function(Tool)
+        if autoEquipCan and Tool:IsA("Tool") and containsIgnoreCase(Tool.Name, "water") then
+            task.wait(0.1)
+            equipWaterCan()
+        end
+    end)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(Character)
+    local Humanoid = Character:WaitForChild("Humanoid", 10)
+    local Backpack = LocalPlayer:WaitForChild("Backpack", 10)
+
+    if Humanoid then
+        task.wait(0.5)
+        if autoEquipCan then
+            equipWaterCan()
+        end
+    end
+    
+    setupBackpackListener(Backpack)
+end)
+
+if LocalPlayer.Backpack then
+    setupBackpackListener(LocalPlayer.Backpack)
+end
