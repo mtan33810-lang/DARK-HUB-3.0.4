@@ -1,9 +1,10 @@
-
 --============================================================
--- DARK HUB 3.0 (UPDATED)
+-- DARK HUB 3.0 (UPDATED & FIXED)
 -- Fixes applied:
---   1. Removed Auto Collect Mutated Plants
---   2. Mutation Search dynamic list filtering fix
+--   1. Removed calls to undefined functions (matchesPlant/matchesMutation)
+--   2. Fixed duplicate getNearbyCollectPlants definition
+--   3. Added missing Auto Plant task loop implementation
+--   4. Scoped all global auto-plant variables to local
 --============================================================
 
 --============================================================
@@ -109,53 +110,28 @@ local function getPlantsPhysical()
 end
 
 --============================================================
--- DATA LISTS (PLANTS)
+-- DATA LISTS (PLANTS & SEEDS)
 --============================================================
 
 local ALL_PLANTS = {
-    "Apple",
-    "Carrot",
-    "Tomato",
-    "Corn",
-    "Pumpkin",
-    "Strawberry",
-    "Blueberry",
-    "Buttercup",
-    "Orange Tulip",
-    "Daffodil",
-    "Watermelon",
-    "Coconut",
-    "Banana",
-    "Bamboo",
-    "Cactus",
-    "Dragon Fruit",
-    "Mango",
-    "Grape",
-    "Pepper",
-    "Cacao",
-    "Mushroom",
-    "Beanstalk",
-    "Ember Lily",
-    "Sugar Apple",
-    "Burning Bud",
-    "Giant Pinecone",
-    "Elder Strawberry",
-    "Romanesco",
-    "Potato",
-    "Broccoli",
-    "Cocomango",
-    "Brussels Sprouts",
-    "Crimson Thorn",
-    "Trinity Fruit",
-    "Alien Apple",
-    "Moongrain Meadow",
-    "Daisy",
-    "Sunflower",
-    "Octobloom",
-    "Zebrazinkle",
-    "Coneflower",
-    "Birds of Paradise",
-    "Hollow"
+    "Apple", "Carrot", "Tomato", "Corn", "Pumpkin", "Strawberry",
+    "Blueberry", "Buttercup", "Orange Tulip", "Daffodil", "Watermelon",
+    "Coconut", "Banana", "Bamboo", "Cactus", "Dragon Fruit", "Mango",
+    "Grape", "Pepper", "Cacao", "Mushroom", "Beanstalk", "Ember Lily",
+    "Sugar Apple", "Burning Bud", "Giant Pinecone", "Elder Strawberry",
+    "Romanesco", "Potato", "Broccoli", "Cocomango", "Brussels Sprouts",
+    "Crimson Thorn", "Trinity Fruit", "Alien Apple", "Moongrain Meadow",
+    "Daisy", "Sunflower", "Octobloom", "Zebrazinkle", "Coneflower",
+    "Birds of Paradise", "Hollow"
+}
+
+local ALL_SEEDS = {
+    "Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato",
+    "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo",
+    "Coconut", "Cactus", "Dragon Fruit", "Mango", "Grape", "Mushroom",
+    "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple",
+    "Burning Bud", "Giant Pinecone", "Elder Strawberry", "Romanesco",
+    "Moon Blossom", "Violet Corn", "Cocovine"
 }
 
 --============================================================
@@ -198,27 +174,34 @@ local function selectionContains(list, value)
 end
 
 --============================================================
--- AUTO WATER SYSTEM
+-- PLANT & SEED MATCHING HELPERS
 --============================================================
 
-local autoWaterEnabled = false
-local autoEquipCan = false
+local function getPlantName(Plant)
+    if not Plant then
+        return ""
+    end
 
-local selectedWaterCan = "Water Can"
-local selectedWaterPlants = {}
+    local AttributeName = Plant:GetAttribute("PlantName")
 
-local waterRadius = 100
-local waterCooldown = 0.2
+    if AttributeName then
+        return tostring(AttributeName)
+    end
 
-local WaterCans = {
-    "Water Can",
-    "Wonder Water",
-    "Super Watering Can",
-    "Sugar Watering Can"
-}
+    return Plant.Name
+end
 
-local function getWaterRemote()
-    return GameEvents:FindFirstChild("Water_RE")
+local function matchesPlant(Plant)
+    if autoCollectAll then
+        return true
+    end
+
+    if autoCollectSelectedPlants then
+        local Name = getPlantName(Plant)
+        return selectionContains(selectedCollectPlants, Name)
+    end
+
+    return false
 end
 
 local function getPlantPosition(Plant)
@@ -235,10 +218,7 @@ local function getPlantPosition(Plant)
             return Plant.PrimaryPart.Position
         end
 
-        local Part = Plant:FindFirstChildWhichIsA(
-            "BasePart",
-            true
-        )
+        local Part = Plant:FindFirstChildWhichIsA("BasePart", true)
 
         if Part then
             return Part.Position
@@ -246,20 +226,6 @@ local function getPlantPosition(Plant)
     end
 
     return nil
-end
-
-local function getPlantName(Plant)
-    if not Plant then
-        return ""
-    end
-
-    local AttributeName = Plant:GetAttribute("PlantName")
-
-    if AttributeName then
-        return tostring(AttributeName)
-    end
-
-    return Plant.Name
 end
 
 local function getUniquePlantNames()
@@ -288,6 +254,30 @@ local function getUniquePlantNames()
     table.sort(Result)
 
     return Result
+end
+
+--============================================================
+-- AUTO WATER SYSTEM
+--============================================================
+
+local autoWaterEnabled = false
+local autoEquipCan = false
+
+local selectedWaterCan = "Water Can"
+local selectedWaterPlants = {}
+
+local waterRadius = 100
+local waterCooldown = 0.2
+
+local WaterCans = {
+    "Water Can",
+    "Wonder Water",
+    "Super Watering Can",
+    "Sugar Watering Can"
+}
+
+local function getWaterRemote()
+    return GameEvents:FindFirstChild("Water_RE")
 end
 
 local function equipWaterCan()
@@ -421,50 +411,6 @@ local selectedCollectPlants = {}
 local collectionRadius = 100
 local collectCooldown = 0.1
 
-local function getNearbyCollectPlants()
-    local PlantsPhysical = getPlantsPhysical()
-    local RootPart = getRootPart()
-
-    if not PlantsPhysical or not RootPart then
-        return {}
-    end
-
-    local Result = {}
-
-    -- Each direct child is treated as ONE plant.
-    -- This prevents multiple descendants of the same plant
-    -- from being detected as separate plants.
-    for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
-        if Plant:IsA("Model") or Plant:IsA("BasePart") then
-            if matchesPlant(Plant) then
-                local Position = getPlantPosition(Plant)
-
-                if Position then
-                    local Distance =
-                        (RootPart.Position - Position).Magnitude
-
-                    if Distance <= collectionRadius then
-                        table.insert(Result, {
-                            Object = Plant,
-                            Distance = Distance
-                        })
-                    end
-                end
-            end
-        end
-    end
-
-    table.sort(Result, function(A, B)
-        return A.Distance < B.Distance
-    end)
-
-    return Result
-end
-
---============================================================
--- COLLECT REMOTE
---============================================================
-
 local function getCollectRemote()
     local Crops = GameEvents:FindFirstChild("Crops")
 
@@ -486,10 +432,7 @@ local function collectPlant(Plant)
         return
     end
 
-    -- Collect remote expects a table containing the plant
-    CollectRemote:FireServer({
-        Plant
-    })
+    CollectRemote:FireServer({ Plant })
 end
 
 local function getNearbyCollectPlants()
@@ -501,32 +444,14 @@ local function getNearbyCollectPlants()
     end
 
     local Result = {}
-    local Seen = {}
 
-    for _, Object in ipairs(PlantsPhysical:GetDescendants()) do
-        local Plant
-
-        if Object:IsA("Model") then
-            Plant = Object
-        elseif Object:IsA("BasePart") then
-            Plant = Object:FindFirstAncestorOfClass("Model")
-        end
-
-        if Plant
-            and Plant ~= PlantsPhysical
-            and not Seen[Plant]
-            and Plant:IsDescendantOf(PlantsPhysical)
-        then
-            Seen[Plant] = true
-
-            if matchesPlant(Plant)
-                and matchesMutation(Plant)
-            then
+    for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
+        if Plant:IsA("Model") or Plant:IsA("BasePart") then
+            if matchesPlant(Plant) then
                 local Position = getPlantPosition(Plant)
 
                 if Position then
-                    local Distance =
-                        (RootPart.Position - Position).Magnitude
+                    local Distance = (RootPart.Position - Position).Magnitude
 
                     if Distance <= collectionRadius then
                         table.insert(Result, {
@@ -545,10 +470,6 @@ local function getNearbyCollectPlants()
 
     return Result
 end
-
---============================================================
--- AUTO COLLECT LOOP
---============================================================
 
 task.spawn(function()
     while true do
@@ -572,53 +493,71 @@ task.spawn(function()
 end)
 
 --============================================================
--- DATA LISTS (SEEDS)
+-- AUTO PLANT SEEDS SYSTEM & LOGIC
 --============================================================
 
-local ALL_SEEDS = {
-    "Carrot",
-    "Strawberry",
-    "Blueberry",
-    "Orange Tulip",
-    "Tomato",
-    "Corn",
-    "Daffodil",
-    "Watermelon",
-    "Pumpkin",
-    "Apple",
-    "Bamboo",
-    "Coconut",
-    "Cactus",
-    "Dragon Fruit",
-    "Mango",
-    "Grape",
-    "Mushroom",
-    "Pepper",
-    "Cacao",
-    "Beanstalk",
-    "Ember Lily",
-    "Sugar Apple",
-    "Burning Bud",
-    "Giant Pinecone",
-    "Elder Strawberry",
-    "Romanesco",
-    "Moon Blossom",
-    "Violet Corn",
-    "Cocovine"
-}
+local autoPlantAll = false
+local autoPlantSelectedSeeds = false
+local autoPlantEnabled = false
 
---============================================================
--- AUTO PLANT SYSTEM & LOGIC
---============================================================
+local selectedPlantSeeds = {}
 
-autoPlantAll = false
-autoPlantSelectedSeeds = false
-autoPlantEnabled = false
+local plantCooldown = 0.1
+local plantingRadius = 100
 
-selectedPlantSeeds = {}
+local function getPlantRemote()
+    local Crops = GameEvents:FindFirstChild("Crops")
+    if not Crops then return nil end
+    return Crops:FindFirstChild("Plant") or Crops:FindFirstChild("PlantSeed")
+end
 
-plantCooldown = 0.1
-plantingRadius = 100
+local function getAvailableSeeds()
+    local Character = getCharacter()
+    local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    local Seeds = {}
+
+    local containers = {}
+    if Character then table.insert(containers, Character) end
+    if Backpack then table.insert(containers, Backpack) end
+
+    for _, container in ipairs(containers) do
+        for _, item in ipairs(container:GetChildren()) do
+            if item:IsA("Tool") and containsIgnoreCase(item.Name, "seed") then
+                local seedName = item.Name:gsub("%s*[S|s]eed%s*", "")
+                
+                local isAllowed = autoPlantAll or selectionContains(selectedPlantSeeds, seedName) or selectionContains(selectedPlantSeeds, item.Name)
+                
+                if isAllowed then
+                    table.insert(Seeds, item)
+                end
+            end
+        end
+    end
+
+    return Seeds
+end
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+
+        if autoPlantEnabled then
+            local RootPart = getRootPart()
+            local Remote = getPlantRemote()
+
+            if RootPart and Remote then
+                local seeds = getAvailableSeeds()
+
+                for _, seedTool in ipairs(seeds) do
+                    if not autoPlantEnabled then break end
+
+                    Remote:FireServer(seedTool, RootPart.Position)
+                    task.wait(plantCooldown)
+                end
+            end
+        end
+    end
+end)
 
 --============================================================
 -- HOME TAB
