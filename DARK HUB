@@ -563,7 +563,7 @@ local Themes = {
 }
 
 for _, ThemeName in ipairs(Themes) do
-    ThemesTab:CreateButton({
+    HomeTab:CreateButton({
         Name = ThemeName,
 
         Callback = function()
