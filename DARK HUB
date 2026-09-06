@@ -679,6 +679,28 @@ HomeTab:CreateSlider({
     end
 })
 
+HomeTab:CreateSection("Teleport")
+
+local teleportEvent = game:GetService("ReplicatedStorage")
+    :WaitForChild("GameEvents")
+    :WaitForChild("PlayerTeleportTriggered")
+
+-- Gear Shop position
+local GearShopPosition = CFrame.new(-235.4, 3.0, -5.0)
+
+local TeleportToGearButton = HomeTab:CreateButton({
+    Name = "Teleport to Gear",
+    Callback = function()
+        teleportEvent:FireServer(growAGardenPosition)
+
+        Rayfield:Notify({
+            Title = "Teleport",
+            Content = "Teleporting to Grow a Garden!",
+            Duration = 3,
+        })
+    end,
+})
+
 HomeTab:CreateSection("Setting")
 
 local SettingsService = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SettingsService")
