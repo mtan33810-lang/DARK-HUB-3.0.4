@@ -775,10 +775,13 @@ EventTab:CreateToggle({
                 while autoBuyHoneySeeds do
                     if selectedHoneySeeds and #selectedHoneySeeds > 0 then
                         pcall(function()
-                            local BuyRemote = GameEvents:FindFirstChild("BuySeed_RE")
-                            if BuyRemote then
-                                for _, seedName in ipairs(selectedHoneySeeds) do
-                                    BuyRemote:FireServer(seedName)
+                            local gameEvents = ReplicatedStorage:FindFirstChild("GameEvents")
+                            local buyEvent = gameEvents and gameEvents:FindFirstChild("BuyEventShopStock")
+
+                            if buyEvent and buyEvent:IsA("RemoteEvent") then
+                                for _, seed in ipairs(selectedHoneySeeds) do
+                                    if not autoBuyHoneySeeds then break end
+                                    buyEvent:FireServer(seed, "Honey Seed Shop")
                                 end
                             end
                         end)
@@ -787,7 +790,173 @@ EventTab:CreateToggle({
                 end
             end)
         end
-    end
+    end,
+})
+
+--============================================================
+-- HONEY COIN SHOP
+--============================================================
+
+local Section = EventTab:CreateSection("HONEY COIN SHOP")
+
+local coinShopOptions = {
+    "Honey Honey Daisy", "Honey Honey Dew", "Honey Hive Seed Pack", "Honey Ambercomb",
+    "Pollen Radar 2026", "Honey Coneflower", "Hive Egg", "Hive Crate",
+    "Professor Bee", "Honey Badger", "Honey Birds of Paradise", "Honey Honey Hollow"
+}
+
+local selectedShopItems = {}
+local autoBuyShopItems = false
+
+EventTab:CreateDropdown({
+    Name = "Select Items to Auto Buy",
+    Options = coinShopOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "CoinShopMultiDropdownFlag",
+    Callback = function(Options)
+        selectedShopItems = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+EventTab:CreateToggle({
+    Name = "Auto Buy Selected Item",
+    CurrentValue = false,
+    Flag = "AutoBuyCoinShopFlag",
+    Callback = function(Value)
+        autoBuyShopItems = Value
+
+        if Value then
+            task.spawn(function()
+                while autoBuyShopItems do
+                    if #selectedShopItems > 0 then
+                        pcall(function()
+                            local gameEvents = ReplicatedStorage:FindFirstChild("GameEvents")
+                            local buyEvent = gameEvents and gameEvents:FindFirstChild("BuyEventShopStock")
+
+                            if buyEvent and buyEvent:IsA("RemoteEvent") then
+                                for _, itemName in ipairs(selectedShopItems) do
+                                    if not autoBuyShopItems then break end
+                                    buyEvent:FireServer(itemName, "Honey Coin Shop")
+                                end
+                            end
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
+
+--============================================================
+-- ROYAL JELLY SHOP
+--============================================================
+
+local Section = EventTab:CreateSection("ROYAL JELLY SHOP")
+
+local royalJellyOptions = {
+    "Pollen Puffball", "Grape Droplet", "Carpenter Bee",
+    "Pet Shard RoyalJelly", "Royal Jelly Fountain", "King Bee", "Pohutukawa"
+}
+
+local selectedRoyalJellyItems = {}
+local autoBuyRoyalJelly = false
+
+EventTab:CreateDropdown({
+    Name = "Select Royal Jelly Shop Items",
+    Options = royalJellyOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "RoyalJellyShopMultiDropdownFlag",
+    Callback = function(Options)
+        selectedRoyalJellyItems = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+EventTab:CreateToggle({
+    Name = "Auto Buy Royal Jelly Shop",
+    CurrentValue = false,
+    Flag = "AutoBuyRoyalJellyShopFlag",
+    Callback = function(Value)
+        autoBuyRoyalJelly = Value
+
+        if Value then
+            task.spawn(function()
+                while autoBuyRoyalJelly do
+                    if #selectedRoyalJellyItems > 0 then
+                        pcall(function()
+                            local gameEvents = ReplicatedStorage:FindFirstChild("GameEvents")
+                            local buyEvent = gameEvents and gameEvents:FindFirstChild("BuyEventShopStock")
+
+                            if buyEvent and buyEvent:IsA("RemoteEvent") then
+                                for _, itemName in ipairs(selectedRoyalJellyItems) do
+                                    if not autoBuyRoyalJelly then break end
+                                    buyEvent:FireServer(itemName, "Royal Jelly Shop")
+                                end
+                            end
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
+
+--============================================================
+-- BEE EGG SHOP
+--============================================================
+
+local Section = EventTab:CreateSection("BEE EGG SHOP")
+
+local beeEggOptions = {
+    "Common Bee Egg", "Rare Bee Egg", "Mythical Bee Egg", "Transcendent Bee Egg"
+}
+
+local selectedBeeEggs = {}
+local autoBuyBeeEggs = false
+
+EventTab:CreateDropdown({
+    Name = "Select Eggs to Auto Buy",
+    Options = beeEggOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "BeeEggShopMultiDropdownFlag",
+    Callback = function(Options)
+        selectedBeeEggs = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+EventTab:CreateToggle({
+    Name = "Auto Buy Bee Eggs",
+    CurrentValue = false,
+    Flag = "AutoBuyBeeEggsFlag",
+    Callback = function(Value)
+        autoBuyBeeEggs = Value
+
+        if Value then
+            task.spawn(function()
+                while autoBuyBeeEggs do
+                    if #selectedBeeEggs > 0 then
+                        pcall(function()
+                            local gameEvents = ReplicatedStorage:FindFirstChild("GameEvents")
+                            local eggShopService = gameEvents and gameEvents:FindFirstChild("BeeColonyEggShopService")
+                            local buyEggFunc = eggShopService and eggShopService:FindFirstChild("BuyBeeEggStock")
+
+                            if buyEggFunc and buyEggFunc:IsA("RemoteFunction") then
+                                for _, eggName in ipairs(selectedBeeEggs) do
+                                    if not autoBuyBeeEggs then break end
+                                    buyEggFunc:InvokeServer(eggName)
+                                end
+                            end
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
 })
 
 --============================================================
