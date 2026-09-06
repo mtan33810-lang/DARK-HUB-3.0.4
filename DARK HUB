@@ -691,11 +691,11 @@ local GearShopPosition = CFrame.new(-235.4, 3.0, -5.0)
 local TeleportToGearButton = HomeTab:CreateButton({
     Name = "Teleport to Gear",
     Callback = function()
-        teleportEvent:FireServer(growAGardenPosition)
+        teleportEvent:FireServer(GearShopPosition)
 
         Rayfield:Notify({
             Title = "Teleport",
-            Content = "Teleporting to Grow a Garden!",
+            Content = "Teleporting to Gear Shop!",
             Duration = 3,
         })
     end,
