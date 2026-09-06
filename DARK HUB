@@ -421,27 +421,6 @@ local selectedCollectPlants = {}
 local collectionRadius = 100
 local collectCooldown = 0.1
 
-local function matchesPlant(Plant)
-    if not Plant then
-        return false
-    end
-
-    if autoCollectAll then
-        return true
-    end
-
-    if not autoCollectSelectedPlants then
-        return false
-    end
-
-    local Name = getPlantName(Plant)
-
-    return selectionContains(
-        selectedCollectPlants,
-        Name
-    )
-end
-
 local function getNearbyCollectPlants()
     local PlantsPhysical = getPlantsPhysical()
     local RootPart = getRootPart()
@@ -451,26 +430,24 @@ local function getNearbyCollectPlants()
     end
 
     local Result = {}
-    local Seen = {}
 
+    -- Each direct child is treated as ONE plant.
+    -- This prevents multiple descendants of the same plant
+    -- from being detected as separate plants.
     for _, Plant in ipairs(PlantsPhysical:GetChildren()) do
         if Plant:IsA("Model") or Plant:IsA("BasePart") then
-            if not Seen[Plant] then
-                Seen[Plant] = true
+            if matchesPlant(Plant) then
+                local Position = getPlantPosition(Plant)
 
-                if matchesPlant(Plant) then
-                    local Position = getPlantPosition(Plant)
+                if Position then
+                    local Distance =
+                        (RootPart.Position - Position).Magnitude
 
-                    if Position then
-                        local Distance =
-                            (RootPart.Position - Position).Magnitude
-
-                        if Distance <= collectionRadius then
-                            table.insert(Result, {
-                                Object = Plant,
-                                Distance = Distance
-                            })
-                        end
+                    if Distance <= collectionRadius then
+                        table.insert(Result, {
+                            Object = Plant,
+                            Distance = Distance
+                        })
                     end
                 end
             end
@@ -1178,11 +1155,25 @@ AutomaticallyTab:CreateToggle({
     end
 })
 
-local Button = AutomaticallyTab:CreateButton({
+AutomaticallyTab:CreateButton({
     Name = "Equip Water Can",
 
     Callback = function()
-        equipWaterCan()
+        local Equipped = equipWaterCan()
+
+        if Equipped then
+            Rayfield:Notify({
+                Title = "Water Can",
+                Content = "Equipped: " .. selectedWaterCan,
+                Duration = 2
+            })
+        else
+            Rayfield:Notify({
+                Title = "Water Can",
+                Content = selectedWaterCan .. " was not found.",
+                Duration = 2
+            })
+        end
     end,
 })
 
