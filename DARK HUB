@@ -21,7 +21,7 @@ local Window = Rayfield:CreateWindow({
     LoadingTitle = "Dark Hub",
     LoadingSubtitle = "by Max",
     ShowText = "Rayfield",
-    Theme = "Default",
+    Theme = "Amethyst",
     ToggleUIKeybind = "K",
 
     DisableRayfieldPrompts = false,
@@ -772,66 +772,28 @@ EventTab:CreateToggle({
     end
 })
 
-local ClaimRewardRE = ReplicatedStorage
-    :WaitForChild("GameEvents")
-    :WaitForChild("Events")
-    :WaitForChild("BeanstalkEvent")
-    :WaitForChild("BeanstalkREClaimReward")
+local ClaimRewardRE = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Events"):WaitForChild("BeanstalkEvent"):WaitForChild("BeanstalkREClaimReward")
 
 local toggledRewards = false
 local MAX_REWARDS = 5
-
--- Change this to wherever your game's reward values are stored
-local RewardsFolder = ReplicatedStorage
-    :WaitForChild("GameEvents")
-    :WaitForChild("Events")
-    :WaitForChild("BeanstalkEvent")
-
-local function isRewardAvailable(index)
-    local reward = RewardsFolder:FindFirstChild("Reward" .. index)
-
-    if reward and reward:IsA("BoolValue") then
-        return reward.Value
-    end
-
-    return false
-end
 
 EventTab:CreateToggle({
     Name = "Auto Claim All Rewards",
     CurrentValue = false,
     Flag = "AutoClaimRewardsToggle",
-
     Callback = function(Value)
         toggledRewards = Value
-
         if toggledRewards then
             task.spawn(function()
                 while toggledRewards do
-                    local claimedSomething = false
-
                     for i = 1, MAX_REWARDS do
-                        if not toggledRewards then
-                            break
-                        end
-
-                        if isRewardAvailable(i) then
-                            claimedSomething = true
-
-                            pcall(function()
-                                ClaimRewardRE:FireServer(i)
-                            end)
-
-                            task.wait(0.1)
-                        end
-                    end
-
-                    -- Nothing available, wait before checking again
-                    if not claimedSomething then
+                        if not toggledRewards then break end
+                        pcall(function()
+                            ClaimRewardRE:FireServer(i)
+                        end)
                         task.wait(2)
-                    else
-                        task.wait(0.5)
                     end
+                    task.wait(3)
                 end
             end)
         end
