@@ -1152,7 +1152,7 @@ ShopTab:CreateDropdown({
 })
 
 ShopTab:CreateToggle({
-    Name = "Auto Buy Seeds",
+    Name = "🌿 Auto Buy Seeds",
     CurrentValue = false,
     Flag = "AutoBuyStandardSeedsFlag",
     Callback = function(Value)
@@ -1194,7 +1194,7 @@ local selectedGears = {}
 local autoBuyGears = false
 
 ShopTab:CreateDropdown({
-    Name = "Select Gears to Auto Buy",
+    Name = "⚙️ Select Gears to Auto Buy",
     Options = gearOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1245,7 +1245,7 @@ local selectedEggs = {}
 local autoBuyEggs = false
 
 ShopTab:CreateDropdown({
-    Name = "Select Eggs to Auto Buy",
+    Name = "🥚 Select Eggs to Auto Buy",
     Options = eggOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1443,6 +1443,34 @@ AutomaticallyTab:CreateInput({
         end
 
         CollectPlantDropdown:Refresh(filtered)
+    end
+})
+
+AutomaticallyTab:CreateSection("Settings")
+
+AutomaticallyTab:CreateSlider({
+    Name = "Collection Radius",
+    Range = {10, 1000},
+    Increment = 10,
+    Suffix = " Studs",
+    CurrentValue = 100,
+    Flag = "CollectionRadius",
+
+    Callback = function(Value)
+        collectionRadius = Value
+    end
+})
+
+AutomaticallyTab:CreateSlider({
+    Name = "Collect Speed",
+    Range = {0.01, 2},
+    Increment = 0.01,
+    Suffix = " sec",
+    CurrentValue = 0.1,
+    Flag = "CollectSpeed",
+
+    Callback = function(Value)
+        collectCooldown = Value
     end
 })
 
