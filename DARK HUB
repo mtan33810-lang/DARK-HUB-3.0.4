@@ -791,6 +791,174 @@ EventTab:CreateToggle({
 })
 
 --============================================================
+-- SHOP TAB
+--============================================================
+
+local ShopTab = Window:CreateTab(
+    "Shop",
+    4483362458
+)
+
+--============================================================
+-- SEED SHOP
+--============================================================
+
+ShopTab:CreateSection("SEED SHOP")
+
+local standardSeedOptions = {
+    "Carrot", "Strawberry", "Blueberry", "Buttercup", "Orange Tulip", "Corn",
+    "Daffodil", "Tomato", "Apple", "Bamboo", "Pumpkin", "Watermelon", "Cactus",
+    "Coconut", "Dragon Fruit", "Mango", "Cacao", "Grape", "Mushroom", "Pepper",
+    "Sunflower", "Beanstalk", "Burning Bud", "Giant Pinecone", "Ember Lily",
+    "Sugar Apple", "Alien Apple", "Crimson Thorn", "Elder Strawberry",
+    "Moongrain Meadow", "Octobloom", "Romanesco", "Zebrazinkle"
+}
+
+local selectedStandardSeeds = {}
+local autoBuyStandardSeeds = false
+
+ShopTab:CreateDropdown({
+    Name = "Select Seeds to Auto Buy",
+    Options = standardSeedOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "StandardSeedMultiDropdownFlag",
+    Callback = function(Options)
+        selectedStandardSeeds = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+ShopTab:CreateToggle({
+    Name = "Auto Buy Seeds",
+    CurrentValue = false,
+    Flag = "AutoBuyStandardSeedsFlag",
+    Callback = function(Value)
+        autoBuyStandardSeeds = Value
+    end,
+})
+
+task.spawn(function()
+    while true do
+        if autoBuyStandardSeeds and #selectedStandardSeeds > 0 then
+            pcall(function()
+                local seedRemote = ReplicatedStorage:FindFirstChild("GameEvents") and ReplicatedStorage.GameEvents:FindFirstChild("BuySeedStock")
+                if seedRemote then
+                    for _, seedName in ipairs(selectedStandardSeeds) do
+                        if not autoBuyStandardSeeds then break end
+                        seedRemote:FireServer("Shop", seedName)
+                    end
+                end
+            end)
+        end
+        task.wait(1)
+    end
+end)
+
+--============================================================
+-- GEAR SHOP
+--============================================================
+
+local Section = ShopTab:CreateSection("GEAR SHOP")
+
+local gearOptions = {
+    "Watering Can", "Trading Ticket", "Trowel", "Recall Wrench", "Basic Sprinkler",
+    "Advanced Sprinkler", "Medium Toy", "Medium Treat", "Godly Sprinkler",
+    "Magnifying Glass", "Master Sprinkler", "Cleaning Spray", "Favorite Tool",
+    "Harvest Tool", "Friendship Pot", "Grandmaster Sprinkler", "Level Up Lollipop"
+}
+
+local selectedGears = {}
+local autoBuyGears = false
+
+ShopTab:CreateDropdown({
+    Name = "Select Gears to Auto Buy",
+    Options = gearOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "GearMultiDropdownFlag",
+    Callback = function(Options)
+        selectedGears = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+ShopTab:CreateToggle({
+    Name = "Auto Buy Multiple Gears",
+    CurrentValue = false,
+    Flag = "AutoBuyMultiFlag",
+    Callback = function(Value)
+        autoBuyGears = Value
+    end,
+})
+
+task.spawn(function()
+    while true do
+        if autoBuyGears and #selectedGears > 0 then
+            pcall(function()
+                local buyRemote = ReplicatedStorage:FindFirstChild("GameEvents") and ReplicatedStorage.GameEvents:FindFirstChild("BuyGearStock")
+                if buyRemote then
+                    for _, gearName in ipairs(selectedGears) do
+                        if not autoBuyGears then break end
+                        buyRemote:FireServer(gearName)
+                    end
+                end
+            end)
+        end
+        task.wait(1)
+    end
+end)
+
+--============================================================
+-- PET EGG SHOP
+--============================================================
+
+local Section = ShopTab:CreateSection("EGG SHOP")
+
+local eggOptions = {
+    "Common Egg", "Uncommon Egg", "Rare Egg", "Legendary Egg",
+    "Mythical Egg", "Bug Egg", "Jungle Egg"
+}
+
+local selectedEggs = {}
+local autoBuyEggs = false
+
+ShopTab:CreateDropdown({
+    Name = "Select Eggs to Auto Buy",
+    Options = eggOptions,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "EggMultiDropdownFlag",
+    Callback = function(Options)
+        selectedEggs = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+ShopTab:CreateToggle({
+    Name = "Auto Buy Eggs",
+    CurrentValue = false,
+    Flag = "AutoBuyEggsFlag",
+    Callback = function(Value)
+        autoBuyEggs = Value
+    end,
+})
+
+task.spawn(function()
+    while true do
+        if autoBuyEggs and #selectedEggs > 0 then
+            pcall(function()
+                local eggRemote = ReplicatedStorage:FindFirstChild("GameEvents") and ReplicatedStorage.GameEvents:FindFirstChild("BuyPetEgg")
+                if eggRemote then
+                    for _, eggType in ipairs(selectedEggs) do
+                        if not autoBuyEggs then break end
+                        eggRemote:FireServer(eggType)
+                    end
+                end
+            end)
+        end
+        task.wait(1)
+    end
+end)
+
+--============================================================
 -- AUTOMATICALLY TAB
 --============================================================
 
