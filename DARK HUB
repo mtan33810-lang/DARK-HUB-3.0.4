@@ -541,71 +541,49 @@ task.spawn(function()
 end)
 
 --============================================================
--- AUTO PLANT SEEDS SYSTEM & LOGIC
+-- SERVICES & VARIABLES & AUTO TROWEL 
 --============================================================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
-local autoPlantAll = false
-local autoPlantSelectedSeeds = false
-local autoPlantEnabled = false
+local TrowelRemote = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("TrowelRemote")
+local PlantsFolder = workspace:WaitForChild("Farm"):WaitForChild("Farm"):WaitForChild("Important"):WaitForChild("Plants_Physical")
 
-local selectedPlantSeeds = {}
+-- State Configuration
+local AutoTrowelEnabled = false
+local PlacementPos = Vector3.new(-44.096, 0.635, -97.672)
 
-local plantCooldown = 0.1
-local plantingRadius = 100
+-- Plants listed here as 'true' will be the ONLY ones targeted
+local AllowedPlants = {
+    ["nil"] = true -- Enabled by default
+}
+local CurrentlySelectedFromDropdown = "nil"
 
-local function getPlantRemote()
-    local Crops = GameEvents:FindFirstChild("Crops")
-    if not Crops then return nil end
-    return Crops:FindFirstChild("Plant") or Crops:FindFirstChild("PlantSeed")
-end
-
-local function getAvailableSeeds()
-    local Character = getCharacter()
-    local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
-    local Seeds = {}
-
-    local containers = {}
-    if Character then table.insert(containers, Character) end
-    if Backpack then table.insert(containers, Backpack) end
-
-    for _, container in ipairs(containers) do
-        for _, item in ipairs(container:GetChildren()) do
-            if item:IsA("Tool") and containsIgnoreCase(item.Name, "seed") then
-                local seedName = item.Name:gsub("%s*[S|s]eed%s*", "")
-                
-                local isAllowed = autoPlantAll or selectionContains(selectedPlantSeeds, seedName) or selectionContains(selectedPlantSeeds, item.Name)
-                
-                if isAllowed then
-                    table.insert(Seeds, item)
-                end
-            end
+--============================================================
+-- HELPER FUNCTIONS
+--============================================================
+local function GetTrowel()
+    for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+        if item.Name:match("^Trowel") then return item end
+    end
+    if LocalPlayer.Character then
+        for _, item in ipairs(LocalPlayer.Character:GetChildren()) do
+            if item.Name:match("^Trowel") then return item end
         end
     end
-
-    return Seeds
+    return nil
 end
 
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-
-        if autoPlantEnabled then
-            local RootPart = getRootPart()
-            local Remote = getPlantRemote()
-
-            if RootPart and Remote then
-                local seeds = getAvailableSeeds()
-
-                for _, seedTool in ipairs(seeds) do
-                    if not autoPlantEnabled then break end
-
-                    Remote:FireServer(seedTool, RootPart.Position)
-                    task.wait(plantCooldown)
-                end
-            end
+-- Checks if the plant is explicitly allowed/selected
+local function IsPlantAllowed(plantInstance)
+    for name, isAllowed in pairs(AllowedPlants) do
+        if isAllowed and (plantInstance.Name == name or plantInstance.Name:find(name)) then
+            return true
         end
     end
-end)
+    return false
+end
 
 --============================================================
 -- HOME TAB
@@ -1715,75 +1693,169 @@ AutomaticallyTab:CreateSlider({
 })
 
 --============================================================
--- AUTO PLANT SEEDS UI
+-- AUTO TROWEL UI
 --============================================================
 
-AutomaticallyTab:CreateSection("AUTO PLANT SEEDS")
+AutomaticallyTab:CreateSection("🪏 AUTO TROWEL")
 
 AutomaticallyTab:CreateToggle({
-    Name = "Auto Plant ALL Seeds",
+    Name = "Enable Auto-Trowel",
     CurrentValue = false,
-    Flag = "AutoPlantAll",
+    Flag = "AutoTrowelToggle",
     Callback = function(Value)
-        autoPlantAll = Value
-        autoPlantEnabled = autoPlantAll or autoPlantSelectedSeeds
-    end
+        AutoTrowelEnabled = Value
+    end,
 })
 
-AutomaticallyTab:CreateToggle({
-    Name = "Auto Plant Selected Seeds",
-    CurrentValue = false,
-    Flag = "AutoPlantSelectedSeeds",
-    Callback = function(Value)
-        autoPlantSelectedSeeds = Value
-        autoPlantEnabled = autoPlantAll or autoPlantSelectedSeeds
-    end
+-- Plant Selection Section
+AutomaticallyTab:CreateSection("Target Plant Selection")
+
+AutomaticallyTab:CreateDropdown({
+    Name = "Select Plant Type",
+    Options = {
+    "Carrot",
+    "Strawberry",
+    "Blueberry",
+    "Orange Tulip",
+    "Tomato",
+    "Corn",
+    "Daffodil",
+    "Watermelon",
+    "Pumpkin",
+    "Apple",
+    "Bamboo",
+    "Coconut",
+    "Cactus",
+    "Dragon Fruit",
+    "Mango",
+    "Grape",
+    "Mushroom",
+    "Pepper",
+    "Cacao",
+    "Beanstalk",
+    "Ember Lily",
+    "Sugar Apple",
+    "Burning Bud",
+    "Giant Pinecone",
+    "Elder Strawberry",
+    "Romanesco",
+    "Potato",
+    "Broccoli",
+    "Cocomango",
+    "Brussels Sprouts",
+    "Crimson Thorn",
+    "Trinity Fruit"
+},
+    CurrentOption = {"Default"},
+    MultipleOptions = false,
+    Flag = "PlantDropdown",
+    Callback = function(Option)
+        CurrentlySelectedFromDropdown = Option[1]
+    end,
 })
 
-local PlantSeedDropdown = AutomaticallyTab:CreateDropdown({
-    Name = "Select Seeds",
-    Options = ALL_SEEDS,
-    CurrentOption = {},
-    MultipleOptions = true,
-    Flag = "SelectedPlantSeeds",
-    Callback = function(Value)
-        selectedPlantSeeds = convertSelection and convertSelection(Value) or Value
-    end
+AutomaticallyTab:CreateButton({
+    Name = "Add Selected Plant To Target List",
+    Callback = function()
+        if CurrentlySelectedFromDropdown then
+            AllowedPlants[CurrentlySelectedFromDropdown] = true
+            Rayfield:Notify({
+                Title = "Plant Added",
+                Content = CurrentlySelectedFromDropdown .. " will now be troweled.",
+                Duration = 2,
+            })
+        end
+    end,
 })
 
-AutomaticallyTab:CreateInput({
-    Name = "Search Seed",
-    PlaceholderText = "Type seed name...",
-    RemoveTextAfterFocusLost = false,
-    Flag = "SeedSearch",
+AutomaticallyTab:CreateButton({
+    Name = "Remove Selected Plant From Target List",
+    Callback = function()
+        if CurrentlySelectedFromDropdown then
+            AllowedPlants[CurrentlySelectedFromDropdown] = false
+            Rayfield:Notify({
+                Title = "Plant Removed",
+                Content = CurrentlySelectedFromDropdown .. " will no longer be troweled.",
+                Duration = 2,
+            })
+        end
+    end,
+})
+
+-- Placement Position Section
+AutomaticallyTab:CreateSection("Target Coordinates")
+
+local PosInput = MainTab:CreateInput({
+    Name = "Placement Position (X, Y, Z)",
+    PlaceholderText = "-44.096, 0.635, -97.672",
+    RemoveTextOnFocusLost = false,
     Callback = function(Text)
-        PlantSeedDropdown:Refresh(filterList(ALL_SEEDS, Text))
-    end
+        local coords = {}
+        for num in string.gmatch(Text, "[%d%.%-]+") do
+            table.insert(coords, tonumber(num))
+        end
+        if #coords == 3 then
+            PlacementPos = Vector3.new(coords[1], coords[2], coords[3])
+            Rayfield:Notify({
+                Title = "Position Updated",
+                Content = string.format("New target: %.2f, %.2f, %.2f", coords[1], coords[2], coords[3]),
+                Duration = 2,
+            })
+        end
+    end,
 })
 
-AutomaticallyTab:CreateSlider({
-    Name = "Planting Speed",
-    Range = {0.01, 2},
-    Increment = 0.01,
-    Suffix = " sec",
-    CurrentValue = 0.1,
-    Flag = "PlantSpeed",
-    Callback = function(Value)
-        plantCooldown = Value
-    end
+AutomaticallyTab:CreateButton({
+    Name = "Set Target to Current Stand Position",
+    Callback = function()
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            PlacementPos = root.Position
+            PosInput:Set(string.format("%.2f, %.2f, %.2f", root.Position.X, root.Position.Y, root.Position.Z))
+            Rayfield:Notify({
+                Title = "Coordinates Updated",
+                Content = "Saved current player position.",
+                Duration = 2,
+            })
+        end
+    end,
 })
 
-AutomaticallyTab:CreateSlider({
-    Name = "Planting Radius",
-    Range = {10, 1000},
-    Increment = 10,
-    Suffix = " Studs",
-    CurrentValue = 100,
-    Flag = "PlantingRadius",
-    Callback = function(Value)
-        plantingRadius = Value
+--============================================================
+-- MAIN EXECUTION LOOP
+--============================================================
+task.spawn(function()
+    while true do
+        if AutoTrowelEnabled then
+            local Trowel = GetTrowel()
+            if Trowel then
+                for _, plant in ipairs(PlantsFolder:GetChildren()) do
+                    if not AutoTrowelEnabled then break end
+                    
+                    -- ONLY process if the plant IS in the allowed list
+                    if IsPlantAllowed(plant) then
+                        local targetCFrame = CFrame.new(PlacementPos)
+                        
+                        -- Request Pickup
+                        pcall(function()
+                            TrowelRemote:InvokeServer("Pickup", Trowel, plant)
+                        end)
+                        
+                        task.wait(0.1)
+                        
+                        -- Request Place
+                        pcall(function()
+                            TrowelRemote:InvokeServer("Place", Trowel, plant, targetCFrame)
+                        end)
+                        
+                        task.wait(0.1)
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
     end
-})
+end)
 
 --============================================================
 -- CHARACTER / TOOL HANDLING
