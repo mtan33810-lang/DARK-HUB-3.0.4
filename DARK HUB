@@ -1785,7 +1785,7 @@ AutomaticallyTab:CreateButton({
 -- Placement Position Section
 AutomaticallyTab:CreateSection("Target Coordinates")
 
-local PosInput = MainTab:CreateInput({
+local PosInput = AutomaticallyTab:CreateInput({
     Name = "Placement Position (X, Y, Z)",
     PlaceholderText = "-44.096, 0.635, -97.672",
     RemoveTextOnFocusLost = false,
