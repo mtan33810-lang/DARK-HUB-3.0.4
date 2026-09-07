@@ -681,7 +681,7 @@ HomeTab:CreateSlider({
 
 HomeTab:CreateSection("💰 Sell All Plants")
 
-EventTab:CreateButton({
+HomeTab:CreateButton({
     Name = "💰 Sell All Inventory",
     Callback = function()
         pcall(function()
@@ -697,7 +697,7 @@ EventTab:CreateButton({
 
 local autoSell = false
 
-EventTab:CreateToggle({
+HomeTab:CreateToggle({
     Name = "🔄 Auto Sell Inventory",
     CurrentValue = false,
     Flag = "AutoSellFlag",
@@ -936,6 +936,63 @@ EventTab:CreateToggle({
     end,
 })
 
+EventTab:CreateSection("🤝 GOLIATH FRIENDSHIP SHOP")
+
+local GoliathFriendshipItems = {
+    "Skyroot Chest",
+    "Griffin Statue",
+    "Bouncy Mushroom",
+    "Beanstalk Painting",
+    "Can of Beans",
+    "Glowpod",
+    "Flare Melon",
+    "Pet Shard GiantBean",
+    "Gnome",
+}
+
+local selectedFriendshipItems = {}
+local autoBuyFriendshipGoods = false
+
+EventTab:CreateDropdown({
+    Name = "Select Items to Auto Buy",
+    Options = GoliathFriendshipItems,
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "EventGoliathFriendshipDropdownFlag",
+    Callback = function(Options)
+        selectedFriendshipItems = typeof(Options) == "table" and Options or {Options}
+    end,
+})
+
+EventTab:CreateToggle({
+    Name = "🛒 Auto Buy Friendship Items",
+    CurrentValue = false,
+    Flag = "AutoBuyGoliathFriendshipFlag",
+    Callback = function(Value)
+        autoBuyFriendshipGoods = Value
+
+        if Value then
+            task.spawn(function()
+                while autoBuyFriendshipGoods do
+                    if selectedFriendshipItems and #selectedFriendshipItems > 0 then
+                        pcall(function()
+                            local gameEvents = ReplicatedStorage:FindFirstChild("GameEvents")
+                            local buyEvent = gameEvents and gameEvents:FindFirstChild("BuyEventShopStock")
+
+                            if buyEvent and buyEvent:IsA("RemoteEvent") then
+                                for _, item in ipairs(selectedFriendshipItems) do
+                                    if not autoBuyFriendshipGoods then break end
+                                    buyEvent:FireServer(item, "Goliath Friendship Shop", 1)
+                                end
+                            end
+                        end)
+                    end
+                    task.wait(1)
+                end
+            end)
+        end
+    end,
+})
 
 --============================================================
 -- BIZZY BEE EVENT
