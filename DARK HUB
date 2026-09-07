@@ -657,6 +657,28 @@ HomeTab:CreateSlider({
     end
 })
 
+HomeTab:CreateSection("🌻 Teleport")
+
+local Button = HomeTab:CreateButton({
+    Name = "🔧 Recall Wrench",
+    Callback = function()
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("GameEvents")
+            :WaitForChild("RecallWrenchTeleport")
+            :FireServer()
+    end,
+})
+
+local Button = HomeTab:CreateButton({
+    Name = "🏮 Event Lantern",
+    Callback = function()
+        game:GetService("ReplicatedStorage")
+            :WaitForChild("GameEvents")
+            :WaitForChild("EventPointTeleport")
+            :FireServer()
+    end,
+})
+
 HomeTab:CreateSection("💰 Sell All Plants")
 
 HomeTab:CreateButton({
@@ -1268,8 +1290,8 @@ EventTab:CreateToggle({
 --============================================================
 
 local ShopTab = Window:CreateTab(
-    "Shop",
-    4483362458
+    "🛒 Shop",
+    nil
 )
 
 --============================================================
