@@ -780,7 +780,7 @@ local EventTab = Window:CreateTab(
 -- BEANSTALK EVENT
 --============================================================
 
-EventTab:CreateSection("BEANSTALK")
+EventTab:CreateSection("🌱 BEANSTALK")
 
 local autoBeanstalk = false
 
@@ -824,7 +824,7 @@ local toggledRewards = false
 local MAX_REWARDS = 5
 
 EventTab:CreateToggle({
-    Name = "Auto Claim All Rewards",
+    Name = "🌿 Auto Claim All Rewards",
     CurrentValue = false,
     Flag = "AutoClaimRewardsToggle",
     Callback = function(Value)
@@ -846,7 +846,7 @@ EventTab:CreateToggle({
     end,
 })
 
-EventTab:CreateSection("GOLD CAULDRON")
+EventTab:CreateSection("🌱 GOLD CAULDRON")
 
 local GoldCauldronSubmitAll = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Events"):WaitForChild("BeanstalkEvent"):WaitForChild("GoldCauldronSubmitAll")
 
@@ -896,7 +896,7 @@ local selectedGoliathItems = {}
 local autoBuyGoliathGoods = false
 
 EventTab:CreateDropdown({
-    Name = "Select Goliath Items to Auto Buy",
+    Name = "🌱 Select Goliath Items to Auto Buy",
     Options = GoliathsGoods, -- Fixed: Matched table name
     CurrentOption = {},
     MultipleOptions = true,
@@ -938,14 +938,14 @@ EventTab:CreateToggle({
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-EventTab:CreateSection("🤝 GOLIATH FRIENDSHIP SHOP")
+EventTab:CreateSection("🤝 GOLIATH FRIENDSHIP DEALS")
 
 local GoliathFriendshipItems = {
     "Skyroot Chest",
     "Griffin Statue",
     "Bouncy Mushroom",
     "Beanstalk Painting",
-    "Can of Beans",
+    "Can Of Beans", -- Fixed capitalization ("Of" instead of "of")
     "Glowpod",
     "Flare Melon",
     "Pet Shard GiantBean",
@@ -956,7 +956,7 @@ local selectedFriendshipItems = {}
 local autoBuyFriendshipGoods = false
 
 EventTab:CreateDropdown({
-    Name = "Select Items to Auto Buy",
+    Name = "🌱 Select Items to Auto Buy",
     Options = GoliathFriendshipItems,
     CurrentOption = {},
     MultipleOptions = true,
@@ -984,7 +984,8 @@ EventTab:CreateToggle({
                             if buyEvent and buyEvent:IsA("RemoteEvent") then
                                 for _, item in ipairs(selectedFriendshipItems) do
                                     if not autoBuyFriendshipGoods then break end
-                                    buyEvent:FireServer(item, "Goliath Friendship Shop", 1)
+                                    -- Fixed merchant name to "Goliath's Friends Deals"
+                                    buyEvent:FireServer(item, "Goliath's Friends Deals")
                                 end
                             end
                         end)
@@ -1078,7 +1079,7 @@ local selectedHoneySeeds = {}
 local autoBuyHoneySeeds = false
 
 EventTab:CreateDropdown({
-    Name = "Select Seeds to Auto Buy",
+    Name = "🍯 Select Seeds to Auto Buy",
     Options = honeySeedOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1089,7 +1090,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "🍯 Auto Buy Seeds",
+    Name = "🛒 Auto Buy Seeds",
     CurrentValue = false,
     Flag = "AutoBuyHoneySeedsFlag",
     Callback = function(Value)
@@ -1134,7 +1135,7 @@ local selectedShopItems = {}
 local autoBuyShopItems = false
 
 EventTab:CreateDropdown({
-    Name = "Select Items to Auto Buy",
+    Name = "🍯 Select Items to Auto Buy",
     Options = coinShopOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1145,7 +1146,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "🍯 Auto Buy Selected Item",
+    Name =  "🛒 Auto Buy Selected Item",
     CurrentValue = false,
     Flag = "AutoBuyCoinShopFlag",
     Callback = function(Value)
@@ -1189,7 +1190,7 @@ local selectedRoyalJellyItems = {}
 local autoBuyRoyalJelly = false
 
 EventTab:CreateDropdown({
-    Name = "Select Royal Jelly Shop Items",
+    Name = "🪼 Select Royal Jelly Shop Items",
     Options = royalJellyOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1200,7 +1201,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "🫟 Auto Buy Royal Jelly Shop",
+    Name = "🛒 Auto Buy Royal Jelly Shop",
     CurrentValue = false,
     Flag = "AutoBuyRoyalJellyShopFlag",
     Callback = function(Value)
@@ -1243,7 +1244,7 @@ local selectedBeeEggs = {}
 local autoBuyBeeEggs = false
 
 EventTab:CreateDropdown({
-    Name = "Select Eggs to Auto Buy",
+    Name = "🥚 Select Eggs to Auto Buy",
     Options = beeEggOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1254,7 +1255,7 @@ EventTab:CreateDropdown({
 })
 
 EventTab:CreateToggle({
-    Name = "🥚 Auto Buy Bee Eggs",
+    Name = "🛒 Auto Buy Bee Eggs",
     CurrentValue = false,
     Flag = "AutoBuyBeeEggsFlag",
     Callback = function(Value)
@@ -1312,7 +1313,7 @@ local selectedStandardSeeds = {}
 local autoBuyStandardSeeds = false
 
 ShopTab:CreateDropdown({
-    Name = "Select Seeds to Auto Buy",
+    Name = "🌿 Select Seeds to Auto Buy",
     Options = standardSeedOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1323,7 +1324,7 @@ ShopTab:CreateDropdown({
 })
 
 ShopTab:CreateToggle({
-    Name = "🌿 Auto Buy Seeds",
+    Name = "🛒 Auto Buy Seeds",
     CurrentValue = false,
     Flag = "AutoBuyStandardSeedsFlag",
     Callback = function(Value)
@@ -1365,7 +1366,7 @@ local selectedGears = {}
 local autoBuyGears = false
 
 ShopTab:CreateDropdown({
-    Name = "Select Gears to Auto Buy",
+    Name = "⚙️ Select Gears to Auto Buy",
     Options = gearOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1376,7 +1377,7 @@ ShopTab:CreateDropdown({
 })
 
 ShopTab:CreateToggle({
-    Name = "⚙️ Auto Buy Gears",
+    Name = "🛒 Auto Buy Gears",
     CurrentValue = false,
     Flag = "AutoBuyMultiFlag",
     Callback = function(Value)
@@ -1416,7 +1417,7 @@ local selectedEggs = {}
 local autoBuyEggs = false
 
 ShopTab:CreateDropdown({
-    Name = "Select Eggs to Auto Buy",
+    Name = "🥚 Select Eggs to Auto Buy",
     Options = eggOptions,
     CurrentOption = {},
     MultipleOptions = true,
@@ -1427,7 +1428,7 @@ ShopTab:CreateDropdown({
 })
 
 ShopTab:CreateToggle({
-    Name = "🥚 Auto Buy Eggs",
+    Name = "🛒 Auto Buy Eggs",
     CurrentValue = false,
     Flag = "AutoBuyEggsFlag",
     Callback = function(Value)
