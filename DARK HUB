@@ -861,7 +861,7 @@ EventTab:CreateToggle({
     end,
 })
 
-EventTab:CreateSection("🌱 GOLD CAULDRON")
+EventTab:CreateSection("🍲 GOLD CAULDRON")
 
 local GoldCauldronSubmitAll = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Events"):WaitForChild("BeanstalkEvent"):WaitForChild("GoldCauldronSubmitAll")
 
@@ -1773,7 +1773,7 @@ AutomaticallyTab:CreateButton({
 })
 
 AutomaticallyTab:CreateButton({
-    Name = "Add Selected Plant To Target List",
+    Name = "Add Selected Plant To Target Plant",
     Callback = function()
         if CurrentlySelectedFromDropdown and CurrentlySelectedFromDropdown ~= "No Plants Found" then
             AllowedPlants[CurrentlySelectedFromDropdown] = true
@@ -1787,7 +1787,7 @@ AutomaticallyTab:CreateButton({
 })
 
 AutomaticallyTab:CreateButton({
-    Name = "Remove Selected Plant From Target List",
+    Name = "Remove Selected Plant From Target Plant",
     Callback = function()
         if CurrentlySelectedFromDropdown then
             AllowedPlants[CurrentlySelectedFromDropdown] = false
