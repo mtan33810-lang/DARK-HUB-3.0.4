@@ -679,6 +679,48 @@ HomeTab:CreateSlider({
     end
 })
 
+HomeTab:CreateSection("💰 Sell All Plants")
+
+EventTab:CreateButton({
+    Name = "💰 Sell All Inventory",
+    Callback = function()
+        pcall(function()
+            local gameEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents")
+            local sellEvent = gameEvents and gameEvents:FindFirstChild("Sell_Inventory")
+            
+            if sellEvent and sellEvent:IsA("RemoteEvent") then
+                sellEvent:FireServer()
+            end
+        end)
+    end,
+})
+
+local autoSell = false
+
+EventTab:CreateToggle({
+    Name = "🔄 Auto Sell Inventory",
+    CurrentValue = false,
+    Flag = "AutoSellFlag",
+    Callback = function(Value)
+        autoSell = Value
+
+        if Value then
+            task.spawn(function()
+                while autoSell do
+                    pcall(function()
+                        local gameEvents = game:GetService("ReplicatedStorage"):FindFirstChild("GameEvents")
+                        local sellEvent = gameEvents and gameEvents:FindFirstChild("Sell_Inventory")
+
+                        if sellEvent and sellEvent:IsA("RemoteEvent") then
+                            sellEvent:FireServer()
+                        end
+                    end)
+                    task.wait(2) -- Fires sell event every 2 seconds
+                end
+            end)
+        end
+    end,
+})
 
 HomeTab:CreateSection("⚙️ Setting")
 
