@@ -21,7 +21,7 @@ local Window = Rayfield:CreateWindow({
     LoadingTitle = "Dark Hub",
     LoadingSubtitle = "by Max",
     ShowText = "Rayfield",
-    Theme = "Amethyst",
+    Theme = "Default",
     ToggleUIKeybind = "K",
 
     DisableRayfieldPrompts = false,
@@ -1530,7 +1530,7 @@ local AutomaticallyTab = Window:CreateTab("Automatically", 4483362458)
 -- AUTO WATER
 --============================================================
 
-AutomaticallyTab:CreateSection("AUTO WATER")
+AutomaticallyTab:CreateSection("💦 AUTO WATER")
 
 AutomaticallyTab:CreateToggle({
     Name = "Auto Water Plants",
@@ -1696,7 +1696,7 @@ AutomaticallyTab:CreateSlider({
 -- AUTO TROWEL UI
 --============================================================
 
-AutomaticallyTab:CreateSection("🪏 AUTO TROWEL")
+AutomaticallyTab:CreateSection("⛏️ AUTO TROWEL")
 
 AutomaticallyTab:CreateToggle({
     Name = "Enable Auto-Trowel",
