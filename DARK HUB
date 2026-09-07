@@ -555,10 +555,25 @@ local AutoTrowelEnabled = false
 local PlacementPos = Vector3.new(-44.096, 0.635, -97.672)
 
 -- Plants listed here as 'true' will be the ONLY ones targeted
-local AllowedPlants = {
-    ["nil"] = true -- Enabled by default
-}
-local CurrentlySelectedFromDropdown = "nil"
+local AllowedPlants = {}
+local CurrentlySelectedFromDropdown = nil
+
+-- Dynamic Plant Scanner
+local function GetGardenPlantNames()
+    local found = {}
+    local hash = {}
+    for _, plant in ipairs(PlantsFolder:GetChildren()) do
+        if not hash[plant.Name] then
+            hash[plant.Name] = true
+            table.insert(found, plant.Name)
+        end
+    end
+    table.sort(found)
+    if #found == 0 then
+        table.insert(found, "No Plants Found")
+    end
+    return found
+end
 
 --============================================================
 -- HELPER FUNCTIONS
@@ -1732,43 +1747,11 @@ AutomaticallyTab:CreateToggle({
 -- Plant Selection Section
 AutomaticallyTab:CreateSection("Target Plant Selection")
 
-AutomaticallyTab:CreateDropdown({
-    Name = "Select Plant Type",
-    Options = {
-    "Carrot",
-    "Strawberry",
-    "Blueberry",
-    "Orange Tulip",
-    "Tomato",
-    "Corn",
-    "Daffodil",
-    "Watermelon",
-    "Pumpkin",
-    "Apple",
-    "Bamboo",
-    "Coconut",
-    "Cactus",
-    "Dragon Fruit",
-    "Mango",
-    "Grape",
-    "Mushroom",
-    "Pepper",
-    "Cacao",
-    "Beanstalk",
-    "Ember Lily",
-    "Sugar Apple",
-    "Burning Bud",
-    "Giant Pinecone",
-    "Elder Strawberry",
-    "Romanesco",
-    "Potato",
-    "Broccoli",
-    "Cocomango",
-    "Brussels Sprouts",
-    "Crimson Thorn",
-    "Trinity Fruit"
-},
-    CurrentOption = {"Default"},
+local initialOptions = GetGardenPlantNames()
+local PlantDropdown = AutomaticallyTab:CreateDropdown({
+    Name = "Select Plant Type (From Garden)",
+    Options = initialOptions,
+    CurrentOption = {initialOptions[1] or "None"},
     MultipleOptions = false,
     Flag = "PlantDropdown",
     Callback = function(Option)
@@ -1777,9 +1760,22 @@ AutomaticallyTab:CreateDropdown({
 })
 
 AutomaticallyTab:CreateButton({
+    Name = "🔄 Refresh Plant List",
+    Callback = function()
+        local updatedList = GetGardenPlantNames()
+        PlantDropdown:Refresh(updatedList)
+        Rayfield:Notify({
+            Title = "Garden Scanned",
+            Content = string.format("Found %d unique plant type(s).", #updatedList),
+            Duration = 2,
+        })
+    end,
+})
+
+AutomaticallyTab:CreateButton({
     Name = "Add Selected Plant To Target List",
     Callback = function()
-        if CurrentlySelectedFromDropdown then
+        if CurrentlySelectedFromDropdown and CurrentlySelectedFromDropdown ~= "No Plants Found" then
             AllowedPlants[CurrentlySelectedFromDropdown] = true
             Rayfield:Notify({
                 Title = "Plant Added",
@@ -1842,6 +1838,43 @@ AutomaticallyTab:CreateButton({
         end
     end,
 })
+
+--============================================================
+-- MAIN EXECUTION LOOP
+--============================================================
+task.spawn(function()
+    while true do
+        if AutoTrowelEnabled then
+            local Trowel = GetTrowel()
+            if Trowel then
+                for _, plant in ipairs(PlantsFolder:GetChildren()) do
+                    if not AutoTrowelEnabled then break end
+                    
+                    -- ONLY process if the plant IS in the allowed list
+                    if IsPlantAllowed(plant) then
+                        local targetCFrame = CFrame.new(PlacementPos)
+                        
+                        -- Request Pickup
+                        pcall(function()
+                            TrowelRemote:InvokeServer("Pickup", Trowel, plant)
+                        end)
+                        
+                        task.wait(0.1)
+                        
+                        -- Request Place
+                        pcall(function()
+                            TrowelRemote:InvokeServer("Place", Trowel, plant, targetCFrame)
+                        end)
+                        
+                        task.wait(0.1)
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
 
 --============================================================
 -- MAIN EXECUTION LOOP
