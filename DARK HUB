@@ -280,6 +280,23 @@ local function getWaterRemote()
     return GameEvents:FindFirstChild("Water_RE")
 end
 
+local function isWaterCanEquipped()
+    local Character = getCharacter()
+    if not Character then
+        return false
+    end
+
+    for _, Tool in ipairs(Character:GetChildren()) do
+        if Tool:IsA("Tool") then
+            if string.lower(Tool.Name) == string.lower(selectedWaterCan) or containsIgnoreCase(Tool.Name, "water") then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 local function equipWaterCan()
     local Character = getCharacter()
     local Humanoid = getHumanoid()
@@ -288,12 +305,8 @@ local function equipWaterCan()
         return false
     end
 
-    for _, Tool in ipairs(Character:GetChildren()) do
-        if Tool:IsA("Tool") then
-            if string.lower(Tool.Name) == string.lower(selectedWaterCan) then
-                return true
-            end
-        end
+    if isWaterCanEquipped() then
+        return true
     end
 
     local Backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
@@ -386,17 +399,41 @@ task.spawn(function()
                 equipWaterCan()
             end
 
-            for _, Data in ipairs(getNearbyWaterPlants()) do
-                if not autoWaterEnabled then
-                    break
-                end
+            -- Ensure watering can is equipped before attempting to water
+            if isWaterCanEquipped() then
+                for _, Data in ipairs(getNearbyWaterPlants()) do
+                    if not autoWaterEnabled or not isWaterCanEquipped() then
+                        break
+                    end
 
-                waterPlant(Data.Object)
-                task.wait(waterCooldown)
+                    waterPlant(Data.Object)
+                    task.wait(waterCooldown)
+                end
             end
         end
     end
 end)
+
+-- Global/Scope Variables (Ensure these are declared prior to UI building)
+ALL_PLANTS = ALL_PLANTS or {}
+ALL_SEEDS = ALL_SEEDS or {}
+
+-- Helper to update dropdown options safely
+local function filterList(sourceList, searchText)
+    local filtered = {}
+    local search = string.lower(searchText or "")
+
+    if search == "" then
+        return sourceList
+    end
+
+    for _, item in ipairs(sourceList) do
+        if string.find(string.lower(item), search, 1, true) then
+            table.insert(filtered, item)
+        end
+    end
+    return filtered
+end
 
 --============================================================
 -- AUTO COLLECT
@@ -1535,28 +1572,6 @@ task.spawn(function()
     end
 end)
 
-    
--- Global/Scope Variables (Ensure these are declared prior to UI building)
-ALL_PLANTS = ALL_PLANTS or {}
-ALL_SEEDS = ALL_SEEDS or {}
-
--- Helper to update dropdown options safely
-local function filterList(sourceList, searchText)
-    local filtered = {}
-    local search = string.lower(searchText or "")
-
-    if search == "" then
-        return sourceList
-    end
-
-    for _, item in ipairs(sourceList) do
-        if string.find(string.lower(item), search, 1, true) then
-            table.insert(filtered, item)
-        end
-    end
-    return filtered
-end
-
 --============================================================
 -- AUTOMATICALLY TAB
 --============================================================
@@ -1611,6 +1626,8 @@ AutomaticallyTab:CreateButton({
     end
 })
 
+AutomaticallyTab:CreateSection("Settings")
+
 AutomaticallyTab:CreateSlider({
     Name = "Water Radius",
     Range = {10, 500},
@@ -1634,6 +1651,7 @@ AutomaticallyTab:CreateSlider({
         waterCooldown = Value
     end
 })
+
 
 --============================================================
 -- AUTO COLLECT UI
