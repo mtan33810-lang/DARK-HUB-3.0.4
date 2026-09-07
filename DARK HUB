@@ -936,6 +936,8 @@ EventTab:CreateToggle({
     end,
 })
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 EventTab:CreateSection("🤝 GOLIATH FRIENDSHIP SHOP")
 
 local GoliathFriendshipItems = {
@@ -1542,7 +1544,7 @@ AutomaticallyTab:CreateSlider({
     Range = {0.05, 2},
     Increment = 0.05,
     Suffix = " sec",
-    CurrentValue = 0.5,
+    CurrentValue = 1,
     Flag = "WaterSpeed",
     Callback = function(Value)
         waterCooldown = Value
