@@ -110,31 +110,6 @@ local function getPlantsPhysical()
 end
 
 --============================================================
--- DATA LISTS (PLANTS & SEEDS)
---============================================================
-
-local ALL_PLANTS = {
-    "Apple", "Carrot", "Tomato", "Corn", "Pumpkin", "Strawberry",
-    "Blueberry", "Buttercup", "Orange Tulip", "Daffodil", "Watermelon",
-    "Coconut", "Banana", "Bamboo", "Cactus", "Dragon Fruit", "Mango",
-    "Grape", "Pepper", "Cacao", "Mushroom", "Beanstalk", "Ember Lily",
-    "Sugar Apple", "Burning Bud", "Giant Pinecone", "Elder Strawberry",
-    "Romanesco", "Potato", "Broccoli", "Cocomango", "Brussels Sprouts",
-    "Crimson Thorn", "Trinity Fruit", "Alien Apple", "Moongrain Meadow",
-    "Daisy", "Sunflower", "Octobloom", "Zebrazinkle", "Coneflower",
-    "Birds of Paradise", "Hollow"
-}
-
-local ALL_SEEDS = {
-    "Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato",
-    "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo",
-    "Coconut", "Cactus", "Dragon Fruit", "Mango", "Grape", "Mushroom",
-    "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple",
-    "Burning Bud", "Giant Pinecone", "Elder Strawberry", "Romanesco",
-    "Moon Blossom", "Violet Corn", "Cocovine"
-}
-
---============================================================
 -- SELECTION HELPERS
 --============================================================
 
@@ -189,19 +164,6 @@ local function getPlantName(Plant)
     end
 
     return Plant.Name
-end
-
-local function matchesPlant(Plant)
-    if autoCollectAll then
-        return true
-    end
-
-    if autoCollectSelectedPlants then
-        local Name = getPlantName(Plant)
-        return selectionContains(selectedCollectPlants, Name)
-    end
-
-    return false
 end
 
 local function getPlantPosition(Plant)
@@ -485,7 +447,6 @@ local function collectPlant(Plant)
         return
     end
 
-    -- Preferred developer-game collect remote
     local CollectRemote = getCollectRemote()
 
     if CollectRemote then
@@ -496,7 +457,6 @@ local function collectPlant(Plant)
         return
     end
 
-    -- Fallback for plants using ProximityPrompts
     local Prompt = Plant:FindFirstChildWhichIsA(
         "ProximityPrompt",
         true
@@ -1652,7 +1612,6 @@ AutomaticallyTab:CreateSlider({
     end
 })
 
-
 --============================================================
 -- AUTO COLLECT UI
 --============================================================
@@ -1685,14 +1644,32 @@ AutomaticallyTab:CreateToggle({
     end
 })
 
+-- Initialize dropdown with current garden plants
+local initialGardenPlants = getUniquePlantNames()
+
 local CollectPlantDropdown = AutomaticallyTab:CreateDropdown({
     Name = "Select Plants",
-    Options = ALL_PLANTS,
+    Options = initialGardenPlants,
     CurrentOption = {},
     MultipleOptions = true,
     Flag = "SelectedCollectPlants",
     Callback = function(Value)
         selectedCollectPlants = convertSelection(Value)
+    end
+})
+
+AutomaticallyTab:CreateButton({
+    Name = "Refresh Garden Plants",
+    Callback = function()
+        local currentGardenPlants = getUniquePlantNames()
+        CollectPlantDropdown:Refresh(currentGardenPlants)
+        
+        Rayfield:Notify({
+            Title = "Garden Scanned",
+            Content = "Updated dropdown with " .. tostring(#currentGardenPlants) .. " detected plant types.",
+            Duration = 3,
+            Image = 4483362458
+        })
     end
 })
 
@@ -1704,11 +1681,12 @@ AutomaticallyTab:CreateInput({
     Callback = function(Text)
         local filtered = {}
         local search = string.lower(Text)
+        local sourceList = getUniquePlantNames()
 
         if search == "" then
-            filtered = ALL_PLANTS
+            filtered = sourceList
         else
-            for _, plant in ipairs(ALL_PLANTS) do
+            for _, plant in ipairs(sourceList) do
                 if string.find(string.lower(plant), search, 1, true) then
                     table.insert(filtered, plant)
                 end
