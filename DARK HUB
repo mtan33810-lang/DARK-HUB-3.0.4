@@ -6,10 +6,10 @@
 -- PLACE CHECK
 --============================================================
 
-if game.PlaceId ~= 126884695634066 then
-    warn("[DARK HUB] This script is only for Grow a Garden.")
-    return
-end
+local PlaceId = game.PlaceId
+
+if PlaceId == 126884695634066 then
+    -- 🌱 Grow a Garden tab
 
 --============================================================
 -- RAYFIELD UI INITIALIZATION
@@ -1953,26 +1953,8 @@ end
 -- DARK HUB 3.0 (Steal An Egg)
 --============================================================
 
-if game.PlaceId == 107778070777162 then
-
-    local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-    local window = Rayfield:CreateWindow({
-        Name = "Dark Hub",
-        LoadingTitle = "Dark Hub 3.0",
-        LoadingSubtitle = "by Steal An Egg",
-        ConfigurationSaving = {
-            Enabled = true,
-            FolderName = "DarkHubConfig",
-            FileName = "ExampleHub"
-        },
-        Discord = {
-            Enabled = true,
-            Invite = "https://discord.gg/wgzWpZkkY",
-            RememberJoins = true
-        },
-        KeySystem = false
-    })
+    elseif PlaceId == 107778070777162 then
+    -- 🎮 Steal An Egg tab
 
     local Maintab = window:CreateTab("Home", 4483362458) -- Title, Image ID
 
