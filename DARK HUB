@@ -3,43 +3,53 @@
 --============================================================
 
 --============================================================
+-- PLACE CHECK
+--============================================================
+
+if game.PlaceId ~= 126884695634066 then
+    warn("[DARK HUB] This script is only for Grow a Garden.")
+    return
+end
+
+--============================================================
 -- RAYFIELD UI INITIALIZATION
 --============================================================
 
-if game.PlaceId == 126884695634066 then
+local Rayfield = loadstring(game:HttpGet(
+    "https://sirius.menu/rayfield"
+))()
 
-    local Rayfield = loadstring(game:HttpGet(
-        "https://sirius.menu/rayfield"
-    ))()
+local Window = Rayfield:CreateWindow({
+    Name = "Dark Hub",
+    Icon = 0,
+    LoadingTitle = "Dark Hub",
+    LoadingSubtitle = "by Max",
+    ShowText = "Rayfield",
+    Theme = "Default",
+    ToggleUIKeybind = "K",
 
-    local Window = Rayfield:CreateWindow({
-        Name = "Dark Hub",
-        Icon = 0,
-        LoadingTitle = "Dark Hub",
-        LoadingSubtitle = "by Max",
-        ShowText = "Rayfield",
-        Theme = "Default",
-        ToggleUIKeybind = "K",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
 
-        DisableRayfieldPrompts = false,
-        DisableBuildWarnings = false,
+    ConfigurationSaving = {
+        Enabled = false,
+        FolderName = nil,
+        FileName = "DarkHub"
+    },
 
-        ConfigurationSaving = {
-            Enabled = false,
-            FolderName = nil,
-            FileName = "DarkHub"
-        },
+    Discord = {
+        Enabled = true,
+        Invite = "wgzWpZkkY",
+        RememberJoins = true
+    },
 
-        Discord = {
-            Enabled = true,
-            Invite = "wgzWpZkkY", -- Passed only the code, not full URL
-            RememberJoins = true
-        },
+    KeySystem = false
+})
 
-        KeySystem = false
-    })
-
-end -- Added missing closing end tag for the PlaceId check
+--============================================================
+-- EVERYTHING BELOW THIS POINT
+-- IS GROW A GARDEN CODE
+--============================================================
 
 --============================================================
 -- SERVICES & LOCAL PLAYER
