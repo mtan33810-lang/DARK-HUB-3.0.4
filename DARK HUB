@@ -8,11 +8,9 @@
 
 local PlaceId = game.PlaceId
 
-local IsGarden = PlaceId == 126884695634066
-local IsGame2 = PlaceId == 107778070777162
-
-if not IsGarden and not IsGame2 then
-    warn("[DARK HUB] Unsupported game: " .. tostring(PlaceId))
+if PlaceId ~= 126884695634066
+and PlaceId ~= 107778070777162 then
+    warn("[DARK HUB] Unsupported game.")
     return
 end
 
@@ -43,6 +41,8 @@ local Window = Rayfield:CreateWindow({
 
     KeySystem = false
 })
+
+if PlaceId == 126884695634066 then
 
 --============================================================
 -- EVERYTHING BELOW THIS POINT
@@ -1951,7 +1951,7 @@ end
 -- DARK HUB 3.0 (Steal An Egg)
 --============================================================
 
-    elseif IsGame2 then
+elseif PlaceId == 107778070777162 then
 
     local Maintab = window:CreateTab("Home", 4483362458) -- Title, Image ID
 
