@@ -2,6 +2,10 @@
 -- DARK HUB 3.0 (Grow a Garden)
 --============================================================
 
+-- Global/Scope Variables
+ALL_PLANTS = ALL_PLANTS or {}
+ALL_SEEDS = ALL_SEEDS or {}
+
 --============================================================
 -- PLACE CHECK
 --============================================================
@@ -39,12 +43,7 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
-if PlaceId == Games.GrowAGarden then
-
---============================================================
--- EVERYTHING BELOW THIS POINT
--- IS GROW A GARDEN CODE
---============================================================
+if game.PlaceId == Games.GrowAGarden then
 
 --============================================================
 -- SERVICES & LOCAL PLAYER
@@ -365,7 +364,6 @@ task.spawn(function()
                 equipWaterCan()
             end
 
-            -- Ensure watering can is equipped before attempting to water
             if isWaterCanEquipped() then
                 for _, Data in ipairs(getNearbyWaterPlants()) do
                     if not autoWaterEnabled or not isWaterCanEquipped() then
@@ -380,11 +378,6 @@ task.spawn(function()
     end
 end)
 
--- Global/Scope Variables (Ensure these are declared prior to UI building)
-ALL_PLANTS = ALL_PLANTS or {}
-ALL_SEEDS = ALL_SEEDS or {}
-
--- Helper to update dropdown options safely
 local function filterList(sourceList, searchText)
     local filtered = {}
     local search = string.lower(searchText or "")
@@ -544,22 +537,16 @@ end)
 --============================================================
 -- SERVICES & VARIABLES & AUTO TROWEL 
 --============================================================
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
 
 local TrowelRemote = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("TrowelRemote")
 local PlantsFolder = workspace:WaitForChild("Farm"):WaitForChild("Farm"):WaitForChild("Important"):WaitForChild("Plants_Physical")
 
--- State Configuration
 local AutoTrowelEnabled = false
 local PlacementPos = Vector3.new(-44.096, 0.635, -97.672)
 
--- Plants listed here as 'true' will be the ONLY ones targeted
 local AllowedPlants = {}
 local CurrentlySelectedFromDropdown = nil
 
--- Dynamic Plant Scanner
 local function GetGardenPlantNames()
     local found = {}
     local hash = {}
@@ -579,6 +566,7 @@ end
 --============================================================
 -- HELPER FUNCTIONS
 --============================================================
+
 local function GetTrowel()
     for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
         if item.Name:match("^Trowel") then return item end
@@ -591,7 +579,6 @@ local function GetTrowel()
     return nil
 end
 
--- Checks if the plant is explicitly allowed/selected
 local function IsPlantAllowed(plantInstance)
     for name, isAllowed in pairs(AllowedPlants) do
         if isAllowed and (plantInstance.Name == name or plantInstance.Name:find(name)) then
@@ -605,10 +592,7 @@ end
 -- HOME TAB
 --============================================================
 
-local HomeTab = Window:CreateTab(
-    "🏠 Home",
-    nil
-)
+local HomeTab = Window:CreateTab("🏠 Home", nil)
 
 HomeTab:CreateSection("🚶Movement")
 
@@ -675,7 +659,7 @@ HomeTab:CreateSlider({
 
 HomeTab:CreateSection("🌻 Teleport")
 
-local Button = HomeTab:CreateButton({
+HomeTab:CreateButton({
     Name = "🔧 Recall Wrench",
     Callback = function()
         game:GetService("ReplicatedStorage")
@@ -685,7 +669,7 @@ local Button = HomeTab:CreateButton({
     end,
 })
 
-local Button = HomeTab:CreateButton({
+HomeTab:CreateButton({
     Name = "🏮 Event Lantern",
     Callback = function()
         game:GetService("ReplicatedStorage")
@@ -731,7 +715,7 @@ HomeTab:CreateToggle({
                             sellEvent:FireServer()
                         end
                     end)
-                    task.wait(2) -- Fires sell event every 2 seconds
+                    task.wait(2)
                 end
             end)
         end
@@ -787,14 +771,7 @@ end
 -- EVENT TAB
 --============================================================
 
-local EventTab = Window:CreateTab(
-    "🎉 Event",
-    nil
-)
-
---============================================================
--- BEANSTALK EVENT
---============================================================
+local EventTab = Window:CreateTab("🎉 Event", nil)
 
 EventTab:CreateSection("🌱 BEANSTALK")
 
@@ -887,12 +864,9 @@ EventTab:CreateToggle({
     end,
 })
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 EventTab:CreateSection("🪵 GOLIATH'S GOODS SHOP")
 
 local GoliathsGoods = {
-    -- Main Goliath's Goods
     "Sprout Seed Pack",
     "Sprout Egg",
     "Mandrake Seed",
@@ -901,8 +875,6 @@ local GoliathsGoods = {
     "Canary Melon Seed",
     "Amberheart",
     "Spriggan",
-
-    -- Cosmetics
     "Golden Goose Painting",
     "Bean Chair",
     "Giant Painting",
@@ -913,7 +885,7 @@ local autoBuyGoliathGoods = false
 
 EventTab:CreateDropdown({
     Name = "🌱 Select Goliath Items to Auto Buy",
-    Options = GoliathsGoods, -- Fixed: Matched table name
+    Options = GoliathsGoods,
     CurrentOption = {},
     MultipleOptions = true,
     Flag = "EventGoliathDropdownFlag",
@@ -952,8 +924,6 @@ EventTab:CreateToggle({
     end,
 })
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 EventTab:CreateSection("🤝 GOLIATH FRIENDSHIP DEALS")
 
 local GoliathFriendshipItems = {
@@ -961,7 +931,7 @@ local GoliathFriendshipItems = {
     "Griffin Statue",
     "Bouncy Mushroom",
     "Beanstalk Painting",
-    "Can Of Beans", -- Fixed capitalization ("Of" instead of "of")
+    "Can Of Beans",
     "Glowpod",
     "Flare Melon",
     "Pet Shard GiantBean",
@@ -1000,7 +970,6 @@ EventTab:CreateToggle({
                             if buyEvent and buyEvent:IsA("RemoteEvent") then
                                 for _, item in ipairs(selectedFriendshipItems) do
                                     if not autoBuyFriendshipGoods then break end
-                                    -- Fixed merchant name to "Goliath's Friends Deals"
                                     buyEvent:FireServer(item, "Goliath's Friends Deals")
                                 end
                             end
@@ -1012,10 +981,6 @@ EventTab:CreateToggle({
         end
     end,
 })
-
---============================================================
--- BIZZY BEE EVENT
---============================================================
 
 EventTab:CreateSection("🐝BIZZY BEE")
 
@@ -1032,8 +997,7 @@ EventTab:CreateToggle({
         if Value then
             task.spawn(function()
                 while autoSubmitHoney do
-                    local Remote =
-                        getEvent("HoneyMachine2026Service_RE")
+                    local Remote = getEvent("HoneyMachine2026Service_RE")
 
                     if Remote then
                         Remote:FireServer("SubmitAll")
@@ -1059,8 +1023,7 @@ EventTab:CreateToggle({
         if Value then
             task.spawn(function()
                 while autoCollectHoney do
-                    local Remote =
-                        getEvent("HoneyMachine2026Service_RE")
+                    local Remote = getEvent("HoneyMachine2026Service_RE")
 
                     if Remote then
                         Remote:FireServer("CollectHoney")
@@ -1072,10 +1035,6 @@ EventTab:CreateToggle({
         end
     end
 })
-
---============================================================
--- HONEY SEED SHOP
---============================================================
 
 EventTab:CreateSection("🐝 HONEY SEED SHOP")
 
@@ -1135,11 +1094,7 @@ EventTab:CreateToggle({
     end,
 })
 
---============================================================
--- HONEY COIN SHOP
---============================================================
-
-local Section = EventTab:CreateSection("🐝 HONEY COIN SHOP")
+EventTab:CreateSection("🐝 HONEY COIN SHOP")
 
 local coinShopOptions = {
     "Honey Honey Daisy", "Honey Honey Dew", "Honey Hive Seed Pack", "Honey Ambercomb",
@@ -1191,11 +1146,7 @@ EventTab:CreateToggle({
     end,
 })
 
---============================================================
--- ROYAL JELLY SHOP
---============================================================
-
-local Section = EventTab:CreateSection("👑 ROYAL JELLY SHOP")
+EventTab:CreateSection("👑 ROYAL JELLY SHOP")
 
 local royalJellyOptions = {
     "Pollen Puffball", "Grape Droplet", "Carpenter Bee",
@@ -1246,11 +1197,7 @@ EventTab:CreateToggle({
     end,
 })
 
---============================================================
--- BEE EGG SHOP
---============================================================
-
-local Section = EventTab:CreateSection("🐝 BEE EGG SHOP")
+EventTab:CreateSection("🐝 BEE EGG SHOP")
 
 local beeEggOptions = {
     "Common Bee Egg", "Rare Bee Egg", "Mythical Bee Egg", "Transcendent Bee Egg"
@@ -1305,14 +1252,7 @@ EventTab:CreateToggle({
 -- SHOP TAB
 --============================================================
 
-local ShopTab = Window:CreateTab(
-    "🛒 Shop",
-    nil
-)
-
---============================================================
--- SEED SHOP
---============================================================
+local ShopTab = Window:CreateTab("🛒 Shop", nil)
 
 ShopTab:CreateSection("SEED SHOP")
 
@@ -1365,11 +1305,7 @@ task.spawn(function()
     end
 end)
 
---============================================================
--- GEAR SHOP
---============================================================
-
-local Section = ShopTab:CreateSection("GEAR SHOP")
+ShopTab:CreateSection("GEAR SHOP")
 
 local gearOptions = {
     "Watering Can", "Trading Ticket", "Trowel", "Recall Wrench", "Basic Sprinkler",
@@ -1418,11 +1354,7 @@ task.spawn(function()
     end
 end)
 
---============================================================
--- PET EGG SHOP
---============================================================
-
-local Section = ShopTab:CreateSection("EGG SHOP")
+ShopTab:CreateSection("EGG SHOP")
 
 local eggOptions = {
     "Common Egg", "Uncommon Egg", "Rare Egg", "Legendary Egg",
@@ -1469,13 +1401,7 @@ task.spawn(function()
     end
 end)
 
---============================================================
--- 🧳 TRAVELING MERCHANT SHOP
---============================================================
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Section = ShopTab:CreateSection("🧳 FALL MERCHANT SHOP")
+ShopTab:CreateSection("🧳 FALL MERCHANT SHOP")
 
 local travelingMerchantOptions = {
     "Fall Seed Pack",
@@ -1534,17 +1460,13 @@ task.spawn(function()
         end
         task.wait(1)
     end
-end)
+end) 
 
 --============================================================
 -- AUTOMATICALLY TAB
 --============================================================
 
 local AutomaticallyTab = Window:CreateTab("Automatically", 4483362458)
-
---============================================================
--- AUTO WATER
---============================================================
 
 AutomaticallyTab:CreateSection("💦 AUTO WATER")
 
@@ -1616,10 +1538,6 @@ AutomaticallyTab:CreateSlider({
     end
 })
 
---============================================================
--- AUTO COLLECT UI
---============================================================
-
 AutomaticallyTab:CreateSection("AUTO COLLECT PLANTS")
 
 AutomaticallyTab:CreateToggle({
@@ -1629,9 +1547,7 @@ AutomaticallyTab:CreateToggle({
 
     Callback = function(Value)
         autoCollectAll = Value
-        autoCollectEnabled =
-            autoCollectAll
-            or autoCollectSelectedPlants
+        autoCollectEnabled = autoCollectAll or autoCollectSelectedPlants
     end
 })
 
@@ -1642,13 +1558,10 @@ AutomaticallyTab:CreateToggle({
 
     Callback = function(Value)
         autoCollectSelectedPlants = Value
-        autoCollectEnabled =
-            autoCollectAll
-            or autoCollectSelectedPlants
+        autoCollectEnabled = autoCollectAll or autoCollectSelectedPlants
     end
 })
 
--- Initialize dropdown with current garden plants
 local initialGardenPlants = getUniquePlantNames()
 
 local CollectPlantDropdown = AutomaticallyTab:CreateDropdown({
@@ -1729,10 +1642,6 @@ AutomaticallyTab:CreateSlider({
     end
 })
 
---============================================================
--- AUTO TROWEL UI
---============================================================
-
 AutomaticallyTab:CreateSection("⛏️ AUTO TROWEL")
 
 AutomaticallyTab:CreateToggle({
@@ -1744,7 +1653,6 @@ AutomaticallyTab:CreateToggle({
     end,
 })
 
--- Plant Selection Section
 AutomaticallyTab:CreateSection("Target Plant Selection")
 
 local initialOptions = GetGardenPlantNames()
@@ -1800,7 +1708,6 @@ AutomaticallyTab:CreateButton({
     end,
 })
 
--- Placement Position Section
 AutomaticallyTab:CreateSection("Target Coordinates")
 
 local PosInput = AutomaticallyTab:CreateInput({
@@ -1842,6 +1749,7 @@ AutomaticallyTab:CreateButton({
 --============================================================
 -- MAIN EXECUTION LOOP
 --============================================================
+
 task.spawn(function()
     while true do
         if AutoTrowelEnabled then
@@ -1850,55 +1758,15 @@ task.spawn(function()
                 for _, plant in ipairs(PlantsFolder:GetChildren()) do
                     if not AutoTrowelEnabled then break end
                     
-                    -- ONLY process if the plant IS in the allowed list
                     if IsPlantAllowed(plant) then
                         local targetCFrame = CFrame.new(PlacementPos)
                         
-                        -- Request Pickup
                         pcall(function()
                             TrowelRemote:InvokeServer("Pickup", Trowel, plant)
                         end)
                         
                         task.wait(0.1)
                         
-                        -- Request Place
-                        pcall(function()
-                            TrowelRemote:InvokeServer("Place", Trowel, plant, targetCFrame)
-                        end)
-                        
-                        task.wait(0.1)
-                    end
-                end
-            end
-        end
-        task.wait(0.5)
-    end
-end)
-
-
---============================================================
--- MAIN EXECUTION LOOP
---============================================================
-task.spawn(function()
-    while true do
-        if AutoTrowelEnabled then
-            local Trowel = GetTrowel()
-            if Trowel then
-                for _, plant in ipairs(PlantsFolder:GetChildren()) do
-                    if not AutoTrowelEnabled then break end
-                    
-                    -- ONLY process if the plant IS in the allowed list
-                    if IsPlantAllowed(plant) then
-                        local targetCFrame = CFrame.new(PlacementPos)
-                        
-                        -- Request Pickup
-                        pcall(function()
-                            TrowelRemote:InvokeServer("Pickup", Trowel, plant)
-                        end)
-                        
-                        task.wait(0.1)
-                        
-                        -- Request Place
                         pcall(function()
                             TrowelRemote:InvokeServer("Place", Trowel, plant, targetCFrame)
                         end)
@@ -1948,13 +1816,9 @@ end
 -- DARK HUB 3.0 (Steal An Egg)
 --============================================================
 
-elseif PlaceId == Games.StealAnEgg then
+elseif game.PlaceId == Games.StealAnEgg then
 
---============================================================
--- MAIN TAB
---============================================================
-
-local Maintab = window:CreateTab("Main", 4483362458) -- Title, Image ID
+local MainTab = Window:CreateTab("Main", 4483362458)
 
 MainTab:CreateSection("🚶Movement")
 
@@ -1970,12 +1834,13 @@ MainTab:CreateToggle({
     end
 })
 
-UserInputService.JumpRequest:Connect(function()
+game:GetService("UserInputService").JumpRequest:Connect(function()
     if not infiniteJump then
         return
     end
 
-    local Humanoid = getHumanoid()
+    local Character = game:GetService("Players").LocalPlayer.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
 
     if Humanoid then
         Humanoid:ChangeState(
@@ -1993,7 +1858,8 @@ MainTab:CreateSlider({
     Flag = "WalkSpeed",
 
     Callback = function(Value)
-        local Humanoid = getHumanoid()
+        local Character = game:GetService("Players").LocalPlayer.Character
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
 
         if Humanoid then
             Humanoid.WalkSpeed = Value
@@ -2010,7 +1876,8 @@ MainTab:CreateSlider({
     Flag = "JumpHeight",
 
     Callback = function(Value)
-        local Humanoid = getHumanoid()
+        local Character = game:GetService("Players").LocalPlayer.Character
+        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
 
         if Humanoid then
             Humanoid.UseJumpPower = false
@@ -2019,14 +1886,20 @@ MainTab:CreateSlider({
     end
 })
 
+else
+
 --========================================================
-    -- UNSUPPORTED GAME
+-- UNSUPPORTED GAME
 --========================================================
 
-    Notify(
-        "Unsupported Game",
-        "Dark Hub does not support this game.",
-        5
-    )
+Rayfield:Notify({
+    Title = "Unsupported Game",
+    Content = "Dark Hub does not support this game.",
+    Duration = 5
+})
 
-end
+end   
+
+                                                        local Humanoid = getHumanoid()
+
+    
