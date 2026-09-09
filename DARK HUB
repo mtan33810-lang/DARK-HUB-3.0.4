@@ -1953,27 +1953,71 @@ end
 
 elseif PlaceId == 107778070777162 then
 
-    local Maintab = window:CreateTab("Home", 4483362458) -- Title, Image ID
+--============================================================
+-- MAIN TAB
+--============================================================
 
-    Maintab:CreateButton({
-        Name = "Say hello",
-        Callback = function()
-            Rayfield:Notify({
-                Title = "Hello",
-                Content = "Your first element works.",
-                Duration = 6.5,
-                Image = 4483362458,
-            })
-        end,
-    })
+local Maintab = window:CreateTab("Main", 4483362458) -- Title, Image ID
 
-    Maintab:CreateToggle({
-        Name = "Auto Sprint",
-        CurrentValue = false,
-        Flag = "AutoSprintToggle", 
-        Callback = function(Value)
-            print("Auto Sprint:", Value)
-        end,
-    })
+MainTab:CreateSection("🚶Movement")
 
-end
+local infiniteJump = false
+
+MainTab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfiniteJump",
+
+    Callback = function(Value)
+        infiniteJump = Value
+    end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if not infiniteJump then
+        return
+    end
+
+    local Humanoid = getHumanoid()
+
+    if Humanoid then
+        Humanoid:ChangeState(
+            Enum.HumanoidStateType.Jumping
+        )
+    end
+end)
+
+MainTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = " Speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeed",
+
+    Callback = function(Value)
+        local Humanoid = getHumanoid()
+
+        if Humanoid then
+            Humanoid.WalkSpeed = Value
+        end
+    end
+})
+
+MainTab:CreateSlider({
+    Name = "Jump Height",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = " Height",
+    CurrentValue = 7,
+    Flag = "JumpHeight",
+
+    Callback = function(Value)
+        local Humanoid = getHumanoid()
+
+        if Humanoid then
+            Humanoid.UseJumpPower = false
+            Humanoid.JumpHeight = Value
+        end
+    end
+})
