@@ -6,13 +6,10 @@
 -- PLACE CHECK
 --============================================================
 
-local PlaceId = game.PlaceId
-
-if PlaceId ~= 126884695634066
-and PlaceId ~= 107778070777162 then
-    warn("[DARK HUB] Unsupported game.")
-    return
-end
+local Games = {
+    GrowAGarden = 126884695634066,
+    StealAnEgg = 107778070777162
+}
 
 local Rayfield = loadstring(game:HttpGet(
     "https://sirius.menu/rayfield"
@@ -42,7 +39,7 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
-if PlaceId == 126884695634066 then
+if PlaceId == Games.GrowAGarden then
 
 --============================================================
 -- EVERYTHING BELOW THIS POINT
@@ -1951,7 +1948,7 @@ end
 -- DARK HUB 3.0 (Steal An Egg)
 --============================================================
 
-elseif PlaceId == 107778070777162 then
+elseif PlaceId == Games.StealAnEgg then
 
 --============================================================
 -- MAIN TAB
@@ -2021,3 +2018,15 @@ MainTab:CreateSlider({
         end
     end
 })
+
+--========================================================
+    -- UNSUPPORTED GAME
+--========================================================
+
+    Notify(
+        "Unsupported Game",
+        "Dark Hub does not support this game.",
+        5
+    )
+
+end
