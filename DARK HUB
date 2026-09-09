@@ -8,12 +8,13 @@
 
 local PlaceId = game.PlaceId
 
-if PlaceId == 126884695634066 then
-    -- 🌱 Grow a Garden tab
+local IsGarden = PlaceId == 126884695634066
+local IsGame2 = PlaceId == 107778070777162
 
---============================================================
--- RAYFIELD UI INITIALIZATION
---============================================================
+if not IsGarden and not IsGame2 then
+    warn("[DARK HUB] Unsupported game: " .. tostring(PlaceId))
+    return
+end
 
 local Rayfield = loadstring(game:HttpGet(
     "https://sirius.menu/rayfield"
@@ -27,9 +28,6 @@ local Window = Rayfield:CreateWindow({
     ShowText = "Rayfield",
     Theme = "Default",
     ToggleUIKeybind = "K",
-
-    DisableRayfieldPrompts = false,
-    DisableBuildWarnings = false,
 
     ConfigurationSaving = {
         Enabled = false,
@@ -1953,8 +1951,7 @@ end
 -- DARK HUB 3.0 (Steal An Egg)
 --============================================================
 
-    elseif PlaceId == 107778070777162 then
-    -- 🎮 Steal An Egg tab
+    elseif IsGame2 then
 
     local Maintab = window:CreateTab("Home", 4483362458) -- Title, Image ID
 
