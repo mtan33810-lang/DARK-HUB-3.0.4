@@ -1895,6 +1895,10 @@ else
 
 elseif game.PlaceId == Games.Rivals then
 
+else
+
+end
+
 --============================================================
 -- SERVICES
 --============================================================
@@ -2702,7 +2706,3 @@ Rayfield:Notify({
 })
 
 end   
-
-                                                        local Humanoid = getHumanoid()
-
-    
