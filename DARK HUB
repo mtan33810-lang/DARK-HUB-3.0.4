@@ -1,10 +1,5 @@
 --============================================================
--- DARK HUB 3.0 (UPDATED & FIXED)
--- Fixes applied:
---   1. Removed calls to undefined functions (matchesPlant/matchesMutation)
---   2. Fixed duplicate getNearbyCollectPlants definition
---   3. Added missing Auto Plant task loop implementation
---   4. Scoped all global auto-plant variables to local
+-- DARK HUB 3.0 (Grow a Garden)
 --============================================================
 
 --============================================================
@@ -1939,3 +1934,9 @@ end)
 if LocalPlayer.Backpack then
     setupBackpackListener(LocalPlayer.Backpack)
 end
+
+--============================================================
+-- DARK HUB 3.0 (Steal An Egg)
+--============================================================
+
+If game.PlaceId == 107778070777162 then
