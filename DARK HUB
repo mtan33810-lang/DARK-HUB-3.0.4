@@ -56,7 +56,7 @@ local Window = Rayfield:CreateWindow({
         RememberJoins = true
     },
 
-    KeySystem = true
+    KeySystem = false
 })
 
 --============================================================
