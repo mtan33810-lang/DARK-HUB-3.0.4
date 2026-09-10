@@ -45,6 +45,16 @@ local Window = Rayfield:CreateWindow({
 })
 
 --============================================================
+-- DEBUG: CHECK CURRENT ROBLOX PLACE
+--============================================================
+
+print("===== DARK HUB DEBUG =====")
+print("GameId:", game.GameId)
+print("PlaceId:", game.PlaceId)
+print("JobId:", game.JobId)
+print("==========================")
+
+--============================================================
 -- GAME 1: GROW A GARDEN
 --============================================================
 if game.PlaceId == Games.GrowAGarden then
