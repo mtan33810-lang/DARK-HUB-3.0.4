@@ -2326,30 +2326,32 @@ end)
 -- GODMODE
 --============================================================
 
+local RunService = game:GetService("RunService")
 local Godmode = false
-local healthConnection = nil
-
-local function bindHealth(humanoid)
-    if healthConnection then
-        healthConnection:Disconnect()
-        healthConnection = nil
-    end
-
-    if humanoid and Godmode then
-        humanoid.Health = humanoid.MaxHealth
-        healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
-            if Godmode and newHealth < humanoid.MaxHealth then
-                humanoid.Health = humanoid.MaxHealth
-            end
-        end)
-    end
-end
+local godmodeConnection = nil
 
 local function setGodmode(value)
     Godmode = value
+
     local character = getCharacter()
     local humanoid = getHumanoid(character)
-    bindHealth(humanoid)
+
+    if Godmode then
+        -- Listen to every frame update to lock health at MaxHealth
+        godmodeConnection = RunService.RenderStepped:Connect(function()
+            local currentCharacter = getCharacter()
+            local currentHumanoid = getHumanoid(currentCharacter)
+            if currentHumanoid then
+                currentHumanoid.Health = currentHumanoid.MaxHealth
+            end
+        end)
+    else
+        -- Stop locking health when toggled off
+        if godmodeConnection then
+            godmodeConnection:Disconnect()
+            godmodeConnection = nil
+        end
+    end
 end
 
 MainTab:CreateToggle({
@@ -2360,14 +2362,6 @@ MainTab:CreateToggle({
         setGodmode(Value)
     end
 })
-
--- Re-apply when character respawns
-LocalPlayer.CharacterAdded:Connect(function(character)
-    local humanoid = character:WaitForChild("Humanoid", 5)
-    if humanoid then
-        bindHealth(humanoid)
-    end
-end)
 
 --============================================================
 -- ESP TAB
