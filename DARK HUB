@@ -2252,20 +2252,37 @@ MainTab:CreateSlider({
     end
 })
 
--- Jump Height
+-- Store the target jump height (defaults to your UI's starting value)
+local currentJumpHeight = 7
+
+-- Function to apply the jump height to a character
+local function applyJumpHeight(character)
+    if not character then return end
+    
+    -- Wait for the Humanoid to load after respawning
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    if humanoid then
+        humanoid.UseJumpPower = false
+        humanoid.JumpHeight = currentJumpHeight
+    end
+end
+
+-- Re-apply jump height whenever a new character spawns
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    applyJumpHeight(newCharacter)
+end)
+
+-- Create the UI Slider
 MainTab:CreateSlider({
     Name = "Jump Height",
     Range = {0, 300},
     Increment = 1,
     Suffix = " Height",
-    CurrentValue = 7,
+    CurrentValue = currentJumpHeight,
     Flag = "JumpHeight",
     Callback = function(Value)
-        local humanoid = getHumanoid(getCharacter())
-        if humanoid then
-            humanoid.UseJumpPower = false
-            humanoid.JumpHeight = Value
-        end
+        currentJumpHeight = Value
+        applyJumpHeight(LocalPlayer.Character)
     end
 })
 
