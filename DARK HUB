@@ -49,9 +49,11 @@ local Window = Rayfield:CreateWindow({
 --============================================================
 
 print("===== DARK HUB DEBUG =====")
+print("Game Name:", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name)
 print("GameId:", game.GameId)
 print("PlaceId:", game.PlaceId)
-print("JobId:", game.JobId)
+print("Expected GrowAGarden:", Games.GrowAGarden)
+print("Match:", game.PlaceId == Games.GrowAGarden)
 print("==========================")
 
 --============================================================
