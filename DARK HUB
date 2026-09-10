@@ -2327,38 +2327,45 @@ end)
 --============================================================
 
 local Godmode = false
+local healthConnection = nil
 
-local function setGodmode(value)
-    Godmode = value
-
-    local character = getCharacter()
-    local humanoid = getHumanoid(character)
+local function bindHealth(humanoid)
+    if healthConnection then
+        healthConnection:Disconnect()
+        healthConnection = nil
+    end
 
     if humanoid and Godmode then
         humanoid.Health = humanoid.MaxHealth
+        healthConnection = humanoid.HealthChanged:Connect(function(newHealth)
+            if Godmode and newHealth < humanoid.MaxHealth then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
     end
+end
+
+local function setGodmode(value)
+    Godmode = value
+    local character = getCharacter()
+    local humanoid = getHumanoid(character)
+    bindHealth(humanoid)
 end
 
 MainTab:CreateToggle({
     Name = "Godmode",
     CurrentValue = false,
     Flag = "Godmode",
-
     Callback = function(Value)
         setGodmode(Value)
     end
 })
 
--- Re-apply after respawn
+-- Re-apply when character respawns
 LocalPlayer.CharacterAdded:Connect(function(character)
-    if not Godmode then
-        return
-    end
-
     local humanoid = character:WaitForChild("Humanoid", 5)
-
     if humanoid then
-        humanoid.Health = humanoid.MaxHealth
+        bindHealth(humanoid)
     end
 end)
 
