@@ -2326,38 +2326,32 @@ end)
 -- GODMODE
 --============================================================
 
-local RunService = game:GetService("RunService")
 local Godmode = false
-local godmodeConnection = nil
+local touchConnections = {}
 
 local function setGodmode(value)
     Godmode = value
-
     local character = getCharacter()
-    local humanoid = getHumanoid(character)
+    if not character then return end
 
     if Godmode then
-        -- Listen to every frame update to lock health at MaxHealth
-        godmodeConnection = RunService.RenderStepped:Connect(function()
-            local currentCharacter = getCharacter()
-            local currentHumanoid = getHumanoid(currentCharacter)
-            if currentHumanoid then
-                currentHumanoid.Health = currentHumanoid.MaxHealth
+        -- Find all TouchTransmitters on character parts and disable them
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                for _, child in ipairs(part:GetChildren()) do
+                    if child:IsA("TouchTransmitter") then
+                        child:Destroy()
+                    end
+                end
             end
-        end)
-    else
-        -- Stop locking health when toggled off
-        if godmodeConnection then
-            godmodeConnection:Disconnect()
-            godmodeConnection = nil
         end
     end
 end
 
 MainTab:CreateToggle({
-    Name = "Godmode",
+    Name = "Godmode (Touch Immune)",
     CurrentValue = false,
-    Flag = "Godmode",
+    Flag = "GodmodeTouch",
     Callback = function(Value)
         setGodmode(Value)
     end
