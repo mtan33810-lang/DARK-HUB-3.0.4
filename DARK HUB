@@ -626,16 +626,6 @@ end
 -- Sprinkler Remote Event
 local SprinklerEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SprinklerService")
 
--- UI Window Setup
-local Window = Rayfield:CreateWindow({
-    Name = "Test Suite | Coordinate Sprinkler",
-    LoadingTitle = "Private Test Environment",
-    LoadingSubtitle = "Coordinate Placement Active",
-    ConfigurationSaving = { Enabled = false },
-    Discord = { Enabled = false },
-    KeySystem = false
-})
-
 -- State Variables
 local AutoSprinklerEnabled = false
 local PlacementInterval = 2
