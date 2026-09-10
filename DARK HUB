@@ -16,6 +16,21 @@ local Games = {
     Rivals = 17625359962
 }
 
+local ConfigFileName
+
+if game.PlaceId == Games.GrowAGarden then
+    ConfigFileName = "DarkHub_GrowAGarden"
+
+elseif game.PlaceId == Games.StealAnEgg then
+    ConfigFileName = "DarkHub_StealAnEgg"
+
+elseif game.PlaceId == Games.Rivals then
+    ConfigFileName = "DarkHub_Rivals"
+
+else
+    ConfigFileName = "DarkHub_Unsupported"
+end
+
 local Rayfield = loadstring(game:HttpGet(
     "https://sirius.menu/rayfield"
 ))()
@@ -30,10 +45,10 @@ local Window = Rayfield:CreateWindow({
     ToggleUIKeybind = "K",
 
     ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "DarkHub"
-    },
+    Enabled = true,
+    FolderName = "DARK HUB",
+    FileName = "DarkHub"
+},
 
     Discord = {
         Enabled = true,
@@ -2829,5 +2844,7 @@ else
 
 end
 
-    
+pcall(function()
+    Rayfield:LoadConfiguration()
+end)    
                         
