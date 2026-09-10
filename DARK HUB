@@ -30,7 +30,7 @@ local Window = Rayfield:CreateWindow({
     ToggleUIKeybind = "K",
 
     ConfigurationSaving = {
-        Enabled = false,
+        Enabled = true,
         FolderName = nil,
         FileName = "DarkHub"
     },
