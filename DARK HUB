@@ -2329,12 +2329,18 @@ end)
 local Godmode = false
 
 local function applyStateGodmode(character)
-    if not character or not Godmode then return end
-    
-    local humanoid = character:WaitForChild("Humanoid", 5)
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        -- Disable the Died state so local scripts cannot force death
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        -- Prevent death if Godmode is active
+        if Godmode then
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            -- Keep HP full
+            humanoid.Health = humanoid.MaxHealth
+        else
+            -- Re-enable death state when Godmode is off
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+        end
     end
 end
 
@@ -2344,13 +2350,25 @@ MainTab:CreateToggle({
     Flag = "GodmodeState",
     Callback = function(Value)
         Godmode = Value
-        applyStateGodmode(getCharacter())
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        applyStateGodmode(character)
     end
 })
 
 LocalPlayer.CharacterAdded:Connect(function(character)
     applyStateGodmode(character)
 end)
+
+-- Optional: Keep health max if toggling during gameplay
+game:GetService("RunService").Heartbeat:Connect(function()
+    if Godmode and LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end
+end)
+
 
 --============================================================
 -- ESP TAB
