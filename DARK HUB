@@ -11,9 +11,9 @@ ALL_SEEDS = ALL_SEEDS or {}
 --============================================================
 
 local Games = {
-    GrowAGarden = 126884695634066,
+    GrowAGarden = 126884639146624,
     StealAnEgg = 107778070777162,
-    Rivals = 17625359962
+    Rivals = 6035872082
 }
 
 local Rayfield = loadstring(game:HttpGet(
@@ -1902,7 +1902,7 @@ MainTab:CreateSlider({
 --============================================================
 -- GAME 3: RIVALS
 --============================================================
-elseif game.PlaceId == Games.Rivals then
+elseif game.GameId == Games.Rivals then
 
 --============================================================
 -- SERVICES
