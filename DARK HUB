@@ -1817,9 +1817,8 @@ if LocalPlayer.Backpack then
 end
 
 --============================================================
--- DARK HUB 3.0 (Steal An Egg)
+-- GAME 2: STEAL AN EGG
 --============================================================
-
 elseif game.PlaceId == Games.StealAnEgg then
 
 local MainTab = Window:CreateTab("Main", 4483362458)
@@ -1893,9 +1892,8 @@ MainTab:CreateSlider({
 else
 
 --============================================================
--- DARK HUB 3.0 (Rivals)
+-- GAME 3: RIVALS
 --============================================================
-
 elseif game.PlaceId == Games.Rivals then
 
 --============================================================
