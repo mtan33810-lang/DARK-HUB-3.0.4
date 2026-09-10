@@ -47,7 +47,7 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = {
     Enabled = true,
     FolderName = "DARK HUB",
-    FileName = "DarkHub"
+    FileName = ConfigFileName
 },
 
     Discord = {
