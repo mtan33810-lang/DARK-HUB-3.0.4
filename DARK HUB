@@ -1912,6 +1912,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -2222,22 +2223,16 @@ MainTab:CreateToggle({
     Name = "Infinite Jump",
     CurrentValue = false,
     Flag = "InfiniteJump",
-
     Callback = function(Value)
         infiniteJump = Value
     end
 })
 
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if not infiniteJump then
-        return
-    end
-
-    local Character = game:GetService("Players").LocalPlayer.Character
-    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-
-    if Humanoid then
-        Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+UserInputService.JumpRequest:Connect(function()
+    if not infiniteJump then return end
+    local humanoid = getHumanoid(getCharacter())
+    if humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
 
@@ -2249,13 +2244,10 @@ MainTab:CreateSlider({
     Suffix = " Speed",
     CurrentValue = 16,
     Flag = "WalkSpeed",
-
     Callback = function(Value)
-        local Character = game:GetService("Players").LocalPlayer.Character
-        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Humanoid then
-            Humanoid.WalkSpeed = Value
+        local humanoid = getHumanoid(getCharacter())
+        if humanoid then
+            humanoid.WalkSpeed = Value
         end
     end
 })
@@ -2268,29 +2260,23 @@ MainTab:CreateSlider({
     Suffix = " Height",
     CurrentValue = 7,
     Flag = "JumpHeight",
-
     Callback = function(Value)
-        local Character = game:GetService("Players").LocalPlayer.Character
-        local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-
-        if Humanoid then
-            Humanoid.UseJumpPower = false
-            Humanoid.JumpHeight = Value
+        local humanoid = getHumanoid(getCharacter())
+        if humanoid then
+            humanoid.UseJumpPower = false
+            humanoid.JumpHeight = Value
         end
     end
 })
 
--- TP Walk Implementation
+-- TP Walk
 local tpWalkEnabled = false
 local tpWalkSpeed = 1
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
 
 MainTab:CreateToggle({
     Name = "TP Walk",
     CurrentValue = false,
     Flag = "TPWalk",
-
     Callback = function(Value)
         tpWalkEnabled = Value
     end
@@ -2303,7 +2289,6 @@ MainTab:CreateSlider({
     Suffix = " Multiplier",
     CurrentValue = 1,
     Flag = "TPWalkSpeed",
-
     Callback = function(Value)
         tpWalkSpeed = Value
     end
@@ -2311,46 +2296,34 @@ MainTab:CreateSlider({
 
 RunService.RenderStepped:Connect(function(deltaTime)
     if not tpWalkEnabled then return end
-
-    local character = Players.LocalPlayer.Character
-    if not character then return end
-
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local character = getCharacter()
+    local humanoid = getHumanoid(character)
+    local hrp = getRoot(character)
 
     if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0 then
-        -- Teleports the root part forward based on movement direction and speed multiplier
         hrp.CFrame = hrp.CFrame + (humanoid.MoveDirection * (tpWalkSpeed * 10) * deltaTime)
     end
 end)
 
+-- GODMODE FIX (State and Collision Mitigation)
 local Godmode = false
-local GodmodeConnection
+local godmodeConnection
 
-local function EnableGodmode()
-    local Character = game.Players.LocalPlayer.Character
-    if not Character then return end
-
-    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-    if not Humanoid then return end
-
-    -- Test implementation:
-    -- Keep health at maximum while enabled.
-    Humanoid.Health = Humanoid.MaxHealth
-
-    GodmodeConnection = Humanoid.HealthChanged:Connect(function()
-        if Godmode and Humanoid.Health < Humanoid.MaxHealth then
-            Humanoid.Health = Humanoid.MaxHealth
+RunService.Stepped:Connect(function()
+    if not Godmode then return end
+    local character = getCharacter()
+    local humanoid = getHumanoid(character)
+    
+    if humanoid then
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        
+        -- Keeps character local state active without server desync
+        if humanoid.Health < humanoid.MaxHealth and humanoid.Health > 0 then
+            humanoid.Health = humanoid.MaxHealth
         end
-    end)
-end
-
-local function DisableGodmode()
-    if GodmodeConnection then
-        GodmodeConnection:Disconnect()
-        GodmodeConnection = nil
     end
-end
+end)
 
 MainTab:CreateToggle({
     Name = "Godmode",
@@ -2358,22 +2331,8 @@ MainTab:CreateToggle({
     Flag = "Godmode",
     Callback = function(Value)
         Godmode = Value
-
-        if Godmode then
-            EnableGodmode()
-        else
-            DisableGodmode()
-        end
     end
 })
-
--- Re-apply after respawn
-game.Players.LocalPlayer.CharacterAdded:Connect(function()
-    if Godmode then
-        task.wait(1)
-        EnableGodmode()
-    end
-end)
 
 --============================================================
 -- ESP TAB
@@ -2879,3 +2838,6 @@ else
     })
 
 end
+
+    
+                        
