@@ -1900,7 +1900,7 @@ end
 -- AUTO PLACE SPRINKLER 
 --============================================================
 
-AutomaticallyTab:CreateSection("Target Mode")
+AutomaticallyTab:CreateSection("AUTO PLACE SPRINKLER")
 
 -- Target Mode Dropdown
 AutomaticallyTab:CreateDropdown({
