@@ -1895,10 +1895,6 @@ else
 
 elseif game.PlaceId == Games.Rivals then
 
-else
-
-end
-
 --============================================================
 -- SERVICES
 --============================================================
@@ -2690,19 +2686,20 @@ end)
 --============================================================
 
 Rayfield:Notify({
-    Title = "Dark Hub",
-    Content = "Developer test hub loaded successfully.",
-    Duration = 3
-})
+        Title = "Dark Hub",
+        Content = "Rivals module loaded successfully.",
+        Duration = 3
+    })
 
---========================================================
--- UNSUPPORTED GAME
---========================================================
+--============================================================
+-- UNSUPPORTED GAME FALLBACK
+--============================================================
+else
 
-Rayfield:Notify({
-    Title = "Unsupported Game",
-    Content = "Dark Hub does not support this game.",
-    Duration = 5
-})
+    Rayfield:Notify({
+        Title = "Unsupported Game",
+        Content = "Dark Hub does not support this game.",
+        Duration = 5
+    })
 
-end   
+end
