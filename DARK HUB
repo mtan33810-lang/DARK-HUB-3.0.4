@@ -620,6 +620,69 @@ local function IsPlantAllowed(plantInstance)
 end
 
 --============================================================
+-- AUTO PLACE SPRINKLER 
+--============================================================
+
+-- Sprinkler Remote Event
+local SprinklerEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SprinklerService")
+
+-- UI Window Setup
+local Window = Rayfield:CreateWindow({
+    Name = "Test Suite | Coordinate Sprinkler",
+    LoadingTitle = "Private Test Environment",
+    LoadingSubtitle = "Coordinate Placement Active",
+    ConfigurationSaving = { Enabled = false },
+    Discord = { Enabled = false },
+    KeySystem = false
+})
+
+-- State Variables
+local AutoSprinklerEnabled = false
+local PlacementInterval = 2
+local OffsetDistance = 3
+local SelectedSprinkler = "Basic Sprinkler"
+local TargetMode = "Player Position" -- "Player Position" or "Custom Coordinates"
+local CustomCoords = { X = 0, Y = 0, Z = 0 }
+local LoopThread = nil
+
+-- Sprinkler Options
+local SprinklerOptions = {
+    "Basic Sprinkler", "Advanced Sprinkler", "Godly Sprinkler", "Master Sprinkler",
+    "Grandmaster Sprinkler", "Berry Blusher Sprinkler", "Flower Froster Sprinkler",
+    "Spice Spritzer Sprinkler", "Stalk Sprout Sprinkler", "Sweet Soaker Sprinkler",
+    "Tropical Mist Sprinkler", "Honey Sprinkler", "Chocolate Sprinkler",
+    "Maple Sprinkler", "Lush Sprinkler", "Geode Sprinkler", "Christmas Sprinkler", "Charcoal Sprinkler"
+}
+
+-- Fire Remote to Place Sprinkler
+local function PlaceSprinklerAtCFrame(targetCFrame)
+    local success, err = pcall(function()
+        SprinklerEvent:FireServer("Create", targetCFrame, SelectedSprinkler)
+    end)
+    
+    if success then
+        print(string.format("[PLACEMENT] Placed '%s' successfully.", SelectedSprinkler))
+    else
+        warn("[PLACEMENT] Remote error:", err)
+    end
+end
+
+-- Process Placement Execution
+local function ProcessPlacement()
+    if TargetMode == "Player Position" then
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local hrp = character.HumanoidRootPart
+            local targetCFrame = hrp.CFrame * CFrame.new(0, -2.5, -OffsetDistance)
+            PlaceSprinklerAtCFrame(targetCFrame)
+        end
+    elseif TargetMode == "Custom Coordinates" then
+        local targetCFrame = CFrame.new(CustomCoords.X, CustomCoords.Y, CustomCoords.Z)
+        PlaceSprinklerAtCFrame(targetCFrame)
+    end
+end
+
+--============================================================
 -- HOME TAB
 --============================================================
 
@@ -1842,6 +1905,162 @@ end)
 if LocalPlayer.Backpack then
     setupBackpackListener(LocalPlayer.Backpack)
 end
+
+--============================================================
+-- AUTO PLACE SPRINKLER 
+--============================================================
+
+AutomaticallyTab:CreateSection("Target Mode")
+
+-- Target Mode Dropdown
+AutomaticallyTab:CreateDropdown({
+    Name = "Placement Target Mode",
+    Options = {"Player Position", "Custom Coordinates"},
+    CurrentOption = {"Player Position"},
+    MultipleOptions = false,
+    Flag = "TargetModeDropdown",
+    Callback = function(Option)
+        TargetMode = typeof(Option) == "table" and Option[1] or Option
+    end,
+})
+
+AutomaticallyTab:CreateSection("Coordinate Settings")
+
+-- Input: X Coordinate
+local InputX = AutomaticallyTab:CreateInput({
+    Name = "X Coordinate",
+    PlaceholderText = "0",
+    RemoveTextOnFocus = false,
+    Callback = function(Text)
+        CustomCoords.X = tonumber(Text) or 0
+    end,
+})
+
+-- Input: Y Coordinate
+local InputY = AutomaticallyTab:CreateInput({
+    Name = "Y Coordinate",
+    PlaceholderText = "0",
+    RemoveTextOnFocus = false,
+    Callback = function(Text)
+        CustomCoords.Y = tonumber(Text) or 0
+    end,
+})
+
+-- Input: Z Coordinate
+local InputZ = AutomaticallyTab:CreateInput({
+    Name = "Z Coordinate",
+    PlaceholderText = "0",
+    RemoveTextOnFocus = false,
+    Callback = function(Text)
+        CustomCoords.Z = tonumber(Text) or 0
+    end,
+})
+
+-- Button: Fetch Player Position into Inputs
+AutomaticallyTab:CreateButton({
+    Name = "📍 Set Coordinates to Current Player Position",
+    Callback = function()
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local pos = character.HumanoidRootPart.Position
+            CustomCoords.X = math.floor(pos.X * 100) / 100
+            CustomCoords.Y = math.floor(pos.Y * 100) / 100
+            CustomCoords.Z = math.floor(pos.Z * 100) / 100
+            
+            InputX:Set(tostring(CustomCoords.X))
+            InputY:Set(tostring(CustomCoords.Y))
+            InputZ:Set(tostring(CustomCoords.Z))
+            
+            Rayfield:Notify({
+                Title = "Coordinates Fetched",
+                Content = string.format("X: %.1f, Y: %.1f, Z: %.1f", CustomCoords.X, CustomCoords.Y, CustomCoords.Z),
+                Duration = 2,
+                Image = 4483362458,
+            })
+        end
+    end,
+})
+
+AutomaticallyTab:CreateSection("Sprinkler Settings")
+
+-- Sprinkler Type Dropdown
+AutomaticallyTab:CreateDropdown({
+    Name = "Select Sprinkler Type",
+    Options = SprinklerOptions,
+    CurrentOption = {"Basic Sprinkler"},
+    MultipleOptions = false,
+    Flag = "SprinklerSelectDropdown",
+    Callback = function(Option)
+        SelectedSprinkler = typeof(Option) == "table" and Option[1] or Option
+    end,
+})
+
+-- Player Forward Offset Distance Slider
+AutomaticallyTab:CreateSlider({
+    Name = "Player Offset Distance",
+    Range = {0, 15},
+    Increment = 0.5,
+    Suffix = " studs ahead",
+    CurrentValue = 3,
+    Flag = "OffsetSlider",
+    Callback = function(Value)
+        OffsetDistance = Value
+    end,
+})
+
+AutomaticallyTab:CreateSection("Auto Placement Controls")
+
+-- Auto Placement Toggle
+AutomaticallyTab:CreateToggle({
+    Name = "Auto Place Sprinkler",
+    CurrentValue = false,
+    Flag = "AutoSprinklerToggle",
+    Callback = function(Value)
+        AutoSprinklerEnabled = Value
+        
+        if AutoSprinklerEnabled then
+            LoopThread = task.spawn(function()
+                while AutoSprinklerEnabled do
+                    ProcessPlacement()
+                    task.wait(PlacementInterval)
+                end
+            end)
+        else
+            if LoopThread then
+                task.cancel(LoopThread)
+                LoopThread = nil
+            end
+        end
+    end,
+})
+
+-- Placement Delay Slider
+AutomaticallyTab:CreateSlider({
+    Name = "Placement Loop Delay",
+    Range = {0.5, 10},
+    Increment = 0.5,
+    Suffix = "s",
+    CurrentValue = 2,
+    Flag = "PlacementDelaySlider",
+    Callback = function(Value)
+        PlacementInterval = Value
+    end,
+})
+
+-- Manual Single Button
+AutomaticallyTab:CreateButton({
+    Name = "Place Once at Target Position",
+    Callback = function()
+        ProcessPlacement()
+    end,
+})
+
+Rayfield:Notify({
+    Title = "Script Loaded",
+    Content = "Coordinates feature added.",
+    Duration = 3,
+    Image = 4483362458,
+})
 
 --============================================================
 -- GAME 2: STEAL AN EGG
