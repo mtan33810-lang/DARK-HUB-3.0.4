@@ -2324,6 +2324,57 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
+local Godmode = false
+local GodmodeConnection
+
+local function EnableGodmode()
+    local Character = game.Players.LocalPlayer.Character
+    if not Character then return end
+
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    if not Humanoid then return end
+
+    -- Test implementation:
+    -- Keep health at maximum while enabled.
+    Humanoid.Health = Humanoid.MaxHealth
+
+    GodmodeConnection = Humanoid.HealthChanged:Connect(function()
+        if Godmode and Humanoid.Health < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
+        end
+    end)
+end
+
+local function DisableGodmode()
+    if GodmodeConnection then
+        GodmodeConnection:Disconnect()
+        GodmodeConnection = nil
+    end
+end
+
+MainTab:CreateToggle({
+    Name = "Godmode",
+    CurrentValue = false,
+    Flag = "Godmode",
+    Callback = function(Value)
+        Godmode = Value
+
+        if Godmode then
+            EnableGodmode()
+        else
+            DisableGodmode()
+        end
+    end
+})
+
+-- Re-apply after respawn
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    if Godmode then
+        task.wait(1)
+        EnableGodmode()
+    end
+end)
+
 --============================================================
 -- ESP TAB
 --============================================================
