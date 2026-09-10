@@ -2327,35 +2327,30 @@ end)
 --============================================================
 
 local Godmode = false
-local touchConnections = {}
 
-local function setGodmode(value)
-    Godmode = value
-    local character = getCharacter()
-    if not character then return end
-
-    if Godmode then
-        -- Find all TouchTransmitters on character parts and disable them
-        for _, part in ipairs(character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                for _, child in ipairs(part:GetChildren()) do
-                    if child:IsA("TouchTransmitter") then
-                        child:Destroy()
-                    end
-                end
-            end
-        end
+local function applyStateGodmode(character)
+    if not character or not Godmode then return end
+    
+    local humanoid = character:WaitForChild("Humanoid", 5)
+    if humanoid then
+        -- Disable the Died state so local scripts cannot force death
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
     end
 end
 
 MainTab:CreateToggle({
-    Name = "Godmode (Touch Immune)",
+    Name = "Godmode (State Override)",
     CurrentValue = false,
-    Flag = "GodmodeTouch",
+    Flag = "GodmodeState",
     Callback = function(Value)
-        setGodmode(Value)
+        Godmode = Value
+        applyStateGodmode(getCharacter())
     end
 })
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    applyStateGodmode(character)
+end)
 
 --============================================================
 -- ESP TAB
