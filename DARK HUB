@@ -36,7 +36,7 @@ local Rayfield = loadstring(game:HttpGet(
 ))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Dark Hub",
+    Name = "✨ DARK HUB ✨",
     Icon = 0,
     LoadingTitle = "Dark Hub",
     LoadingSubtitle = "by Max",
