@@ -2305,34 +2305,45 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
--- GODMODE FIX (State and Collision Mitigation)
-local Godmode = false
-local godmodeConnection
+--============================================================
+-- GODMODE
+--============================================================
 
-RunService.Stepped:Connect(function()
-    if not Godmode then return end
+local Godmode = false
+
+local function setGodmode(value)
+    Godmode = value
+
     local character = getCharacter()
     local humanoid = getHumanoid(character)
-    
-    if humanoid then
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-        
-        -- Keeps character local state active without server desync
-        if humanoid.Health < humanoid.MaxHealth and humanoid.Health > 0 then
-            humanoid.Health = humanoid.MaxHealth
-        end
+
+    if humanoid and Godmode then
+        humanoid.Health = humanoid.MaxHealth
     end
-end)
+end
 
 MainTab:CreateToggle({
     Name = "Godmode",
     CurrentValue = false,
     Flag = "Godmode",
+
     Callback = function(Value)
-        Godmode = Value
+        setGodmode(Value)
     end
 })
+
+-- Re-apply after respawn
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if not Godmode then
+        return
+    end
+
+    local humanoid = character:WaitForChild("Humanoid", 5)
+
+    if humanoid then
+        humanoid.Health = humanoid.MaxHealth
+    end
+end)
 
 --============================================================
 -- ESP TAB
