@@ -1954,6 +1954,11 @@ local Settings = {
 
 local attackTimer = 0
 
+-- Shared Raycast Parameters to eliminate Garbage Collection allocations per frame
+local wallCheckParams = RaycastParams.new()
+wallCheckParams.FilterType = Enum.RaycastFilterType.Exclude
+wallCheckParams.IgnoreWater = true
+
 --============================================================
 -- UTILITY
 --============================================================
@@ -2021,18 +2026,13 @@ local function isVisible(targetPart)
     local origin = Camera.CFrame.Position
     local direction = targetPart.Position - origin
 
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Exclude
-
     local ignore = {}
     if LocalPlayer.Character then
         table.insert(ignore, LocalPlayer.Character)
     end
+    wallCheckParams.FilterDescendantsInstances = ignore
 
-    params.FilterDescendantsInstances = ignore
-    params.IgnoreWater = true
-
-    local result = workspace:Raycast(origin, direction, params)
+    local result = workspace:Raycast(origin, direction, wallCheckParams)
     return result == nil
 end
 
@@ -2593,7 +2593,7 @@ end)
 -- AIM LOOP
 --============================================================
 
-RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function(deltaTime)
     if FOVCircle then
         FOVCircle.Visible = Settings.ShowFOV
         if Settings.ShowFOV then
@@ -2613,18 +2613,17 @@ RunService.RenderStepped:Connect(function()
         Settings.AimTarget = target
     end
 
-    if not target then return end
+    if not target or not target.Character then return end
 
-    local character = target.Character
-    local targetPart = character:FindFirstChild(Settings.TargetPart) or character:FindFirstChild("HumanoidRootPart")
-
+    local targetPart = target.Character:FindFirstChild(Settings.TargetPart) or target.Character:FindFirstChild("HumanoidRootPart")
     if not targetPart then
         Settings.AimTarget = nil
         return
     end
 
+    local alpha = math.clamp(Settings.Smoothness * (deltaTime * 60), 0, 1)
     local desired = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
-    Camera.CFrame = Camera.CFrame:Lerp(desired, Settings.Smoothness)
+    Camera.CFrame = Camera.CFrame:Lerp(desired, alpha)
 end)
 
 --============================================================
@@ -2685,10 +2684,10 @@ end)
 --============================================================
 
 Rayfield:Notify({
-        Title = "Dark Hub",
-        Content = "Rivals module loaded successfully.",
-        Duration = 3
-    })
+    Title = "Dark Hub",
+    Content = "Rivals module loaded successfully.",
+    Duration = 3
+})
 
 --============================================================
 -- UNSUPPORTED GAME FALLBACK
