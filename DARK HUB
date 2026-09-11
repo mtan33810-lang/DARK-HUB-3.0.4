@@ -2125,6 +2125,13 @@ MainTab:CreateSlider({
     end
 })
 
+Rayfield:Notify({
+    Title = "Script Loaded",
+    Content = "Steal an Egg loaded successfully.",
+    Duration = 3,
+    Image = 4483362458,
+})
+
 --============================================================
 -- GAME 3: RIVALS
 --============================================================
@@ -2228,20 +2235,40 @@ local function isValidEnemy(enemy)
 end
 
 --============================================================
--- PLAYER VALIDATION (FIXED TEAM CHECK)
+-- PLAYER VALIDATION (UNIVERSAL & RIVALS TEAM CHECK)
 --============================================================
 
 local function isValidPlayerTarget(player)
     if not player or player == LocalPlayer then return false end
 
     if Settings.TeamCheck then
-        -- Check if both players have assigned Team instances and match
-        if player.Team ~= nil and LocalPlayer.Team ~= nil then
-            if player.Team == LocalPlayer.Team then
+        -- 1. Standard Roblox Team Check
+        if player.Team and LocalPlayer.Team then
+            if player.Team == LocalPlayer.Team then return false end
+        elseif player.TeamColor == LocalPlayer.TeamColor and player.TeamColor ~= BrickColor.new("White") then
+            return false
+        end
+
+        -- 2. Attribute-based Team Check (Used in Rivals / Custom Engines)
+        local myTeamAttr = LocalPlayer:GetAttribute("Team") or LocalPlayer:GetAttribute("TeamColor")
+        local enemyTeamAttr = player:GetAttribute("Team") or player:GetAttribute("TeamColor")
+        if myTeamAttr and enemyTeamAttr and myTeamAttr == enemyTeamAttr then
+            return false
+        end
+
+        -- 3. Character Folder / Parent Team Check
+        local myChar = LocalPlayer.Character
+        local enemyChar = player.Character
+        if myChar and enemyChar and myChar.Parent and enemyChar.Parent then
+            if myChar.Parent ~= workspace and myChar.Parent == enemyChar.Parent then
                 return false
             end
-        -- Fallback check for matching TeamColors
-        elseif player.TeamColor == LocalPlayer.TeamColor then
+        end
+
+        -- 4. Value Object Team Check (TeamValue/Team inside Player or Character)
+        local myTeamValue = LocalPlayer:FindFirstChild("Team") or (myChar and myChar:FindFirstChild("Team"))
+        local enemyTeamValue = player:FindFirstChild("Team") or (enemyChar and enemyChar:FindFirstChild("Team"))
+        if myTeamValue and enemyTeamValue and myTeamValue.Value == enemyTeamValue.Value then
             return false
         end
     end
