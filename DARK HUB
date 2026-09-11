@@ -2235,52 +2235,52 @@ local function isValidEnemy(enemy)
 end
 
 --============================================================
--- PLAYER VALIDATION (UNIVERSAL & RIVALS TEAM CHECK)
+-- PLAYER VALIDATION (FIXED FOR RIVALS)
 --============================================================
 
 local function isValidPlayerTarget(player)
     if not player or player == LocalPlayer then return false end
 
+    local character = player.Character
+    local localChar = LocalPlayer.Character
+    if not character or not localChar then return false end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local targetPart = character:FindFirstChild(Settings.TargetPart) or character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoid or not targetPart or humanoid.Health <= 0 then return false end
+
     if Settings.TeamCheck then
-        -- 1. Standard Roblox Team Check
-        if player.Team and LocalPlayer.Team then
+        -- 1. Check Roblox Teams
+        if player.Team ~= nil and LocalPlayer.Team ~= nil then
             if player.Team == LocalPlayer.Team then return false end
         elseif player.TeamColor == LocalPlayer.TeamColor and player.TeamColor ~= BrickColor.new("White") then
             return false
         end
 
-        -- 2. Attribute-based Team Check (Used in Rivals / Custom Engines)
-        local myTeamAttr = LocalPlayer:GetAttribute("Team") or LocalPlayer:GetAttribute("TeamColor")
-        local enemyTeamAttr = player:GetAttribute("Team") or player:GetAttribute("TeamColor")
-        if myTeamAttr and enemyTeamAttr and myTeamAttr == enemyTeamAttr then
-            return false
-        end
-
-        -- 3. Character Folder / Parent Team Check
-        local myChar = LocalPlayer.Character
-        local enemyChar = player.Character
-        if myChar and enemyChar and myChar.Parent and enemyChar.Parent then
-            if myChar.Parent ~= workspace and myChar.Parent == enemyChar.Parent then
+        -- 2. Check Rivals Model Highlights / Outlines (Red vs Blue/Green)
+        local myHighlight = localChar:FindFirstChildOfClass("Highlight")
+        local enemyHighlight = character:FindFirstChildOfClass("Highlight")
+        if myHighlight and enemyHighlight then
+            if myHighlight.FillColor == enemyHighlight.FillColor or myHighlight.OutlineColor == enemyHighlight.OutlineColor then
                 return false
             end
         end
 
-        -- 4. Value Object Team Check (TeamValue/Team inside Player or Character)
-        local myTeamValue = LocalPlayer:FindFirstChild("Team") or (myChar and myChar:FindFirstChild("Team"))
-        local enemyTeamValue = player:FindFirstChild("Team") or (enemyChar and enemyChar:FindFirstChild("Team"))
-        if myTeamValue and enemyTeamValue and myTeamValue.Value == enemyTeamValue.Value then
+        -- 3. Check Workspace Teams/Folders (e.g., workspace.Teams.Red)
+        if character.Parent and localChar.Parent and character.Parent ~= workspace then
+            if character.Parent == localChar.Parent then return false end
+        end
+
+        -- 4. Check Rivals Team Attributes
+        local myTeam = LocalPlayer:GetAttribute("Team") or localChar:GetAttribute("Team") or LocalPlayer:GetAttribute("TeamColor")
+        local enemyTeam = player:GetAttribute("Team") or character:GetAttribute("Team") or player:GetAttribute("TeamColor")
+        if myTeam and enemyTeam and myTeam == enemyTeam then
             return false
         end
     end
 
-    local character = player.Character
-    if not character then return false end
-
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    local targetPart = character:FindFirstChild(Settings.TargetPart) or character:FindFirstChild("HumanoidRootPart")
-
-    if not humanoid or not targetPart then return false end
-    return humanoid.Health > 0
+    return true
 end
 
 --============================================================
@@ -2682,7 +2682,7 @@ ESPTab:CreateSlider({
     CurrentValue = 1.5,
     Flag = "TracerThickness",
     Callback = function(Value) Settings.TracerThickness = Value end
-}) 
+})
 
 --============================================================
 -- AIM TAB
@@ -2729,7 +2729,7 @@ AimTab:CreateToggle({
 AimTab:CreateToggle({
     Name = "Team Check",
     CurrentValue = false,
-    Flag = "AimTeamCheck",
+    Flag = "TeamCheck",
     Callback = function(Value) Settings.TeamCheck = Value end
 })
 
