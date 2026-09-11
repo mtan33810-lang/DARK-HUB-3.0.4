@@ -13,7 +13,7 @@ ALL_SEEDS = ALL_SEEDS or {}
 local Games = {
     GrowAGarden = 126884695634066,
     StealAnEgg = 107778070777162,
-    Rivals = 17625359962
+    Rivals = 6035872082
 }
 
 local ConfigFileName
