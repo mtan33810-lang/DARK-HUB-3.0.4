@@ -2047,7 +2047,7 @@ AutomaticallyTab:CreateButton({
 
 Rayfield:Notify({
     Title = "Script Loaded",
-    Content = "Coordinates feature added.",
+    Content = "Grow a Garden loaded successfully.",
     Duration = 3,
     Image = 4483362458,
 })
@@ -2228,17 +2228,20 @@ local function isValidEnemy(enemy)
 end
 
 --============================================================
--- PLAYER VALIDATION
+-- PLAYER VALIDATION (FIXED TEAM CHECK)
 --============================================================
 
 local function isValidPlayerTarget(player)
     if not player or player == LocalPlayer then return false end
 
     if Settings.TeamCheck then
-        if player.Team ~= nil and player.Team == LocalPlayer.Team then
-            return false
-        end
-        if player.TeamColor == LocalPlayer.TeamColor then
+        -- Check if both players have assigned Team instances and match
+        if player.Team ~= nil and LocalPlayer.Team ~= nil then
+            if player.Team == LocalPlayer.Team then
+                return false
+            end
+        -- Fallback check for matching TeamColors
+        elseif player.TeamColor == LocalPlayer.TeamColor then
             return false
         end
     end
@@ -2652,7 +2655,7 @@ ESPTab:CreateSlider({
     CurrentValue = 1.5,
     Flag = "TracerThickness",
     Callback = function(Value) Settings.TracerThickness = Value end
-})
+}) 
 
 --============================================================
 -- AIM TAB
@@ -3055,5 +3058,4 @@ end
 
 pcall(function()
     Rayfield:LoadConfiguration()
-end)    
-                        
+end)
