@@ -2645,6 +2645,51 @@ RunService.RenderStepped:Connect(function(deltaTime)
     end
 end)
 
+MainTab:CreateSection("Setting")
+
+MainTab:CreateButton({
+
+    Name = "Destroy UI",
+
+    Callback = function()
+
+        AutoPlantEnabled = false
+
+        Rayfield:Destroy()
+
+    end
+})
+
+MainTab:CreateSection("Themes")
+
+local Themes = {
+    "Default",
+    "AmberGlow",
+    "Amethyst",
+    "Bloom",
+    "DarkBlue",
+    "Green",
+    "Light",
+    "Ocean",
+    "Serenity"
+}
+
+for _, ThemeName in ipairs(Themes) do
+    MainTab:CreateButton({
+        Name = ThemeName,
+
+        Callback = function()
+            Window.ModifyTheme(ThemeName)
+
+            Rayfield:Notify({
+                Title = "Theme Changed",
+                Content = "Theme: " .. ThemeName,
+                Duration = 2
+            })
+        end
+    })
+end
+
 --============================================================
 -- ESP TAB
 --============================================================
