@@ -2251,14 +2251,30 @@ local function isValidPlayerTarget(player)
     if not humanoid or not targetPart or humanoid.Health <= 0 then return false end
 
     if Settings.TeamCheck then
-        -- 1. Check Roblox Teams
+        -- 1. Standard Roblox Teams Check
         if player.Team ~= nil and LocalPlayer.Team ~= nil then
             if player.Team == LocalPlayer.Team then return false end
-        elseif player.TeamColor == LocalPlayer.TeamColor and player.TeamColor ~= BrickColor.new("White") then
+        end
+
+        -- 2. Team Color Check (Ignores Neutral/White)
+        if player.TeamColor == LocalPlayer.TeamColor and player.TeamColor ~= BrickColor.new("White") then
             return false
         end
 
-        -- 2. Check Rivals Model Highlights / Outlines (Red vs Blue/Green)
+        -- 3. Rivals Team Attributes (Checks both Player and Character models)
+        local myTeam = LocalPlayer:GetAttribute("Team") 
+            or localChar:GetAttribute("Team") 
+            or LocalPlayer:GetAttribute("TeamColor")
+            
+        local enemyTeam = player:GetAttribute("Team") 
+            or character:GetAttribute("Team") 
+            or player:GetAttribute("TeamColor")
+
+        if myTeam and enemyTeam and myTeam == enemyTeam then
+            return false
+        end
+
+        -- 4. Rivals Model Highlights / Outlines (Red vs Blue/Green)
         local myHighlight = localChar:FindFirstChildOfClass("Highlight")
         local enemyHighlight = character:FindFirstChildOfClass("Highlight")
         if myHighlight and enemyHighlight then
@@ -2267,16 +2283,9 @@ local function isValidPlayerTarget(player)
             end
         end
 
-        -- 3. Check Workspace Teams/Folders (e.g., workspace.Teams.Red)
+        -- 5. Workspace Folder Teams Check (e.g., workspace.Teams.Red)
         if character.Parent and localChar.Parent and character.Parent ~= workspace then
             if character.Parent == localChar.Parent then return false end
-        end
-
-        -- 4. Check Rivals Team Attributes
-        local myTeam = LocalPlayer:GetAttribute("Team") or localChar:GetAttribute("Team") or LocalPlayer:GetAttribute("TeamColor")
-        local enemyTeam = player:GetAttribute("Team") or character:GetAttribute("Team") or player:GetAttribute("TeamColor")
-        if myTeam and enemyTeam and myTeam == enemyTeam then
-            return false
         end
     end
 
@@ -2630,9 +2639,11 @@ ESPTab:CreateToggle({
 
 ESPTab:CreateToggle({
     Name = "Team Check",
-    CurrentValue = false,
-    Flag = "TeamCheck",
-    Callback = function(Value) Settings.TeamCheck = Value end
+    CurrentValue = Settings.TeamCheck,
+    Flag = "ESP_TeamCheck",
+    Callback = function(Value) 
+        Settings.TeamCheck = Value 
+    end
 })
 
 ESPTab:CreateSection("Box")
@@ -2728,9 +2739,11 @@ AimTab:CreateToggle({
 
 AimTab:CreateToggle({
     Name = "Team Check",
-    CurrentValue = false,
-    Flag = "TeamCheck",
-    Callback = function(Value) Settings.TeamCheck = Value end
+    CurrentValue = Settings.TeamCheck,
+    Flag = "Aim_TeamCheck",
+    Callback = function(Value) 
+        Settings.TeamCheck = Value 
+    end
 })
 
 AimTab:CreateDropdown({
